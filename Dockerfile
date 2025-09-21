@@ -8,6 +8,7 @@ RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
 # Install dotenvx for injecting production database string
+RUN apk add --no-cache curl
 RUN curl -sfS https://dotenvx.sh | sh
 
 COPY go.mod go.sum ./
