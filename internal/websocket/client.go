@@ -44,10 +44,10 @@ func (c *Client) WriteMessage() {
 
 		// Render message as sender or receiver.
 		var content templ.Component
-		if message.Username == c.username {
-			content = components.SenderBubble(message.Content, c.username)
-		} else {
+		if message.Username == c.username && message.Userid != c.userid {
 			content = components.ReceiverBubble(message.Content, message.Username)
+		} else {
+			content = components.SenderBubble(message.Content, c.username)
 		}
 		content.Render(context.Background(), w)
 
