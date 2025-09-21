@@ -21,5 +21,10 @@ FROM scratch
 COPY --from=builder ./server ./server
 COPY --from=builder ./app/static ./static
 COPY --from=builder ./go/bin/goose ./goose
+COPY --from=builder ./.env.production .
+
+# Install dotenvx for injecting production database string
+RUN wget -qO- https://dotenvx.sh | sh
+
 EXPOSE 8080
-CMD [ "/server" ]
+CMD [ "dotenvx", "run", "-f", ".env.production", "--", "/server" ]
