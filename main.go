@@ -8,7 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/a-h/templ"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	components "github.com/johndosdos/chat-app/components/chat"
 	"github.com/johndosdos/chat-app/internal/database"
 
@@ -17,23 +17,23 @@ import (
 )
 
 var (
-	dbConn    *pgx.Conn
+	dbConn    *pgxpool.Pool
 	dbQueries *database.Queries
 )
 
 func main() {
 	port := ":8080"
-	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
 	// database init start
 	var err error
 	dbURL := os.Getenv("DB_URL")
-	dbConn, err = pgx.Connect(ctx, dbURL)
+	dbConn, err = pgxpool.New(ctx, dbURL)
 	if err != nil {
 		log.Printf("[Error] cannot connect to postgresql database: %v", err)
 		return
 	}
-	defer dbConn.Close(ctx)
 
 	dbQueries = database.New(dbConn)
 	// database init end
@@ -49,6 +49,8 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.Handle("/", templ.Handler(components.Base()))
 	http.HandleFunc("/ws", handler.ServeWs(ctx, hub, dbQueries))
+
+	defer dbConn.Close()
 
 	log.Println("Server starting at port", port)
 	log.Fatal(http.ListenAndServe(port, nil))
