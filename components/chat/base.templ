@@ -23,11 +23,24 @@ templ Base() {
 					localStorage.setItem("username", username);
 				}
 
-				// Include the username as a parameter on initial (page load) websocket connection request
-				// to the server.
-				document.body.addEventListener("htmx:wsConfigSend", event => {
-					event.detail.parameters["username"] = username;
-				})
+				// Create uuid for each connection.
+				let userid = localStorage.getItem("userid");
+				if (!userid) {
+					userid = crypto.randomUUID();
+					localStorage.setItem("userid", userid);
+				}
+
+				// We must inject username and uuid into the websocket URL before it makes its first
+				// request to the server.
+				let tempURL = new URL("/ws", window.location.origin);
+				tempURL.searchParams.append("userid", userid);
+				tempURL.searchParams.append("username", username);
+				let wsURL = tempURL.toString();
+
+				let chatWindow = document.querySelector("div[ws-connect]");
+				if (chatWindow) {
+					chatWindow.setAttribute("ws-connect", wsURL);
+				}
 			</script>
 		</body>
 	</html>

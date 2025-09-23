@@ -10,7 +10,7 @@ import (
 
 type Message struct {
 	Content  string `json:"content"`
-	Username string `json:"username"`
+	Username string
 	Userid   uuid.UUID
 }
 

@@ -30,12 +30,11 @@ func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 	for {
 		select {
 		case client := <-h.Register:
-			client.userid = uuid.New()
-			h.clients[client.userid] = client
+			h.clients[client.Userid] = client
 			client.Hub = h
 			h.Ok <- true
 		case client := <-h.Unregister:
-			delete(h.clients, client.userid)
+			delete(h.clients, client.Userid)
 		case message := <-h.accept:
 			// We need to sanitize incoming messages to prevent XSS.
 			sanitized := h.sanitizer.Sanitize(message.Content)

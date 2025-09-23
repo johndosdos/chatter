@@ -13,8 +13,8 @@ import (
 )
 
 type Client struct {
-	userid   uuid.UUID
-	username string
+	Userid   uuid.UUID
+	Username string
 	conn     *websocket.Conn
 	Hub      *Hub
 	Recv     chan chat.Message
@@ -44,10 +44,10 @@ func (c *Client) WriteMessage() {
 
 		// Render message as sender or receiver.
 		var content templ.Component
-		if message.Username == c.username && message.Userid != c.userid {
-			content = components.ReceiverBubble(message.Content, message.Username)
+		if message.Userid == c.Userid {
+			content = components.SenderBubble(message.Content, c.Username)
 		} else {
-			content = components.SenderBubble(message.Content, c.username)
+			content = components.ReceiverBubble(message.Content, message.Username)
 		}
 		content.Render(context.Background(), w)
 
@@ -73,17 +73,14 @@ func (c *Client) ReadMessage() {
 		// We need to unmarshal the JSON sent from the client side. HTMX's ws-send
 		// attribute will also send a HEADERS field along with the client message.
 		message := chat.Message{
-			Userid: c.userid,
+			Userid:   c.Userid,
+			Username: c.Username,
 		}
 		err = json.Unmarshal(p, &message)
 		if err != nil {
 			log.Printf("[error] failed to process payload from client: %v", err)
 			break
 		}
-
-		// Set client's username on the server using the payload sent from
-		// client's browser.
-		c.username = message.Username
 
 		c.Hub.accept <- message
 	}
