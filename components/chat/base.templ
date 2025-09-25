@@ -41,6 +41,12 @@ templ Base() {
 				if (chatWindow) {
 					chatWindow.setAttribute("ws-connect", wsURL);
 				}
+
+				// Add auto-scroll mechanism on new messages, with animation.
+				document.body.addEventListener("htmx:oobAfterSwap", () => {
+					let el = document.getElementById("message-area");
+					el.scroll({ top: el.scrollHeight, behavior: "smooth" })
+				})
 			</script>
 		</body>
 	</html>
