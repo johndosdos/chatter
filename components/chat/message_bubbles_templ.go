@@ -29,20 +29,20 @@ func ReceiverBubble(message, from string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-swap-oob=\"beforeend:#message-area\"><div class=\"flex flex-col items-start\"><div class=\"text-xs text-gray-500 dark:text-gray-400 mb-1 ml-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-swap-oob=\"beforeend:#message-area\"><div class=\"flex flex-col items-start\"><div class=\"text-xs text-gray-500 mb-1 ml-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(from)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 6, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 6, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div class=\"bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 p-3 rounded-2xl max-w-[80%] message-bubble shadow-sm\"><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div class=\"bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] message-bubble shadow-lg\"><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -84,20 +84,20 @@ func SenderBubble(message, from string) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div hx-swap-oob=\"beforeend:#message-area\"><div class=\"flex flex-col items-end\"><div class=\"text-xs text-gray-500 dark:text-gray-400 mb-1 mr-3\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div hx-swap-oob=\"beforeend:#message-area\"><div class=\"flex flex-col items-end\"><div class=\"text-xs text-gray-500 mb-1 mr-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(from)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 17, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 17, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div class=\"bg-gray-800 dark:bg-gray-500 text-white p-3 rounded-2xl max-w-[80%] message-bubble shadow-sm\"><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div class=\"bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] message-bubble shadow-lg\"><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -139,7 +139,7 @@ func MessageArea() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"message-area\" class=\"flex-1 p-4 overflow-y-auto space-y-4\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"message-area\" class=\"flex-1 p-4 overflow-y-auto space-y-4 pb-24\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

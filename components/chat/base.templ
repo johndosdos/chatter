@@ -10,8 +10,17 @@ templ Base() {
 			<link rel="stylesheet" href="/static/output.css"/>
 			<script src="/static/htmx.min.js"></script>
 			<script src="/static/htmx-ext-ws.js"></script>
+			<style>
+				#message-area::-webkit-scrollbar {
+					display: none;
+				}
+				#message-area {
+					-ms-overflow-style: none;
+					scrollbar-width: none;
+				}
+			</style>
 		</head>
-		<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen p-4 font-sans overflow-hidden">
+		<body class="bg-zinc-950 flex items-center justify-center min-h-screen font-sans overflow-hidden">
 			@ChatWindow()
 			// Here, we ask clients for their username through the window.prompt() method.
 			// We'll also be using local storage to store their usernames in the browser.
