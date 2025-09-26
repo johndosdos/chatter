@@ -5,4 +5,5 @@ RETURNING *;
 
 -- name: ListMessages :many
 SELECT * FROM messages
-ORDER BY created_at ASC;
+ORDER BY created_at ASC
+LIMIT 50;

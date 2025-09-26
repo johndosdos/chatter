@@ -39,6 +39,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 const listMessages = `-- name: ListMessages :many
 SELECT id, user_id, username, content, created_at FROM messages
 ORDER BY created_at ASC
+LIMIT 50
 `
 
 func (q *Queries) ListMessages(ctx context.Context) ([]Message, error) {
