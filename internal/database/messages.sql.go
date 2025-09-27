@@ -12,19 +12,25 @@ import (
 )
 
 const createMessage = `-- name: CreateMessage :one
-INSERT INTO messages (user_id, username, content)
-VALUES ($1, $2, $3)
+INSERT INTO messages (user_id, username, content, created_at)
+VALUES ($1, $2, $3, $4)
 RETURNING id, user_id, username, content, created_at
 `
 
 type CreateMessageParams struct {
-	UserID   pgtype.UUID
-	Username string
-	Content  string
+	UserID    pgtype.UUID
+	Username  string
+	Content   string
+	CreatedAt pgtype.Timestamp
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
-	row := q.db.QueryRow(ctx, createMessage, arg.UserID, arg.Username, arg.Content)
+	row := q.db.QueryRow(ctx, createMessage,
+		arg.UserID,
+		arg.Username,
+		arg.Content,
+		arg.CreatedAt,
+	)
 	var i Message
 	err := row.Scan(
 		&i.ID,

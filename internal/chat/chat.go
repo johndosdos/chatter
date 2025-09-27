@@ -3,15 +3,17 @@ package chat
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/johndosdos/chat-app/internal/database"
 )
 
 type Message struct {
-	Content  string `json:"content"`
-	Username string
-	Userid   uuid.UUID
+	Content   string `json:"content"`
+	Username  string
+	Userid    uuid.UUID
+	CreatedAt time.Time
 }
 
 func DbLoadChatHistory(ctx context.Context, recv chan Message, db *database.Queries) {
@@ -29,9 +31,10 @@ func DbLoadChatHistory(ctx context.Context, recv chan Message, db *database.Quer
 	for _, msg := range dbMessageList {
 		select {
 		case recv <- Message{
-			Userid:   msg.UserID.Bytes,
-			Username: msg.Username,
-			Content:  msg.Content,
+			Userid:    msg.UserID.Bytes,
+			Username:  msg.Username,
+			Content:   msg.Content,
+			CreatedAt: msg.CreatedAt.Time,
 		}:
 		case <-ctx.Done():
 			return

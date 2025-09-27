@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -55,6 +56,11 @@ func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message 
 		UserID:   pgtype.UUID{Bytes: [16]byte(message.Userid), Valid: true},
 		Username: message.Username,
 		Content:  string(message.Content),
+		CreatedAt: pgtype.Timestamp{
+			Time:             time.Now(),
+			InfinityModifier: 0,
+			Valid:            true,
+		},
 	})
 	if err != nil {
 		log.Printf("[DB error] failed to store message to database: %v", err)

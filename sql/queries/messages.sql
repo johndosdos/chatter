@@ -1,6 +1,6 @@
 -- name: CreateMessage :one
-INSERT INTO messages (user_id, username, content)
-VALUES ($1, $2, $3)
+INSERT INTO messages (user_id, username, content, created_at)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: ListMessages :many

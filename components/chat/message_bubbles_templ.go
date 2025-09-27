@@ -42,7 +42,7 @@ func ReceiverBubble(message, from string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div class=\"bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] message-bubble shadow-lg\"><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div class=\"bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg\"><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -97,7 +97,7 @@ func SenderBubble(message, from string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div class=\"bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] message-bubble shadow-lg\"><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div class=\"bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg\"><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
