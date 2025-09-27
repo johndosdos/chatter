@@ -4,8 +4,9 @@ templ ChatWindow() {
 	<div
 		hx-ext="ws"
 		ws-connect="/ws"
-		class="w-full h-screen max-w-3xl overflow-hidden flex flex-col relative"
+		class="w-full h-dvh max-w-3xl overflow-hidden flex flex-col relative"
 	>
+		<div class="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-zinc-950 to-transparent pointer-events-none"></div>
 		@MessageArea()
 		<div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none"></div>
 		@ChatInput()
