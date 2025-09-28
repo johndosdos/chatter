@@ -1,6 +1,6 @@
-# Real-Time Chat Application
+# Chatter
 
-A simple, real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
+Chatter is a simple, real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
 
 The app is deployed on `Render` and uses `Neon`, a serverless PostgreSQL database for message persistence.
 
