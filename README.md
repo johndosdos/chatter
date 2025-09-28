@@ -33,10 +33,11 @@ The application uses a modern stack for real-time communication.
    A serverless PostgreSQL instance on Neon stores all messages, providing persistent chat history.
 
 ## Technologies Used
-- **Backend**: [`Go`](https://go.dev/)  
-- **Frontend**: [`templ`](https://github.com/a-h/templ), [`htmx`](https://htmx.org/), [`Tailwind CSS`](https://tailwindcss.com/)  
-- **Real-Time Communication**: WebSockets ([`gorilla/websocket`](https://github.com/gorilla/websocket))  
-- **Database**: PostgreSQL with [`sqlc`](https://sqlc.dev/) for type-safe query generation  
-- **Deployment**:  
-  - Hosted on [`Render`](https://render.com/)  
+- **Backend**: [`Go`](https://go.dev/)
+- **Frontend**: [`templ`](https://github.com/a-h/templ), [`htmx`](https://htmx.org/), [`Tailwind CSS`](https://tailwindcss.com/)
+- **Real-Time Communication**: WebSockets ([`gorilla/websocket`](https://github.com/gorilla/websocket))
+- **Database**: PostgreSQL with [`sqlc`](https://sqlc.dev/) for type-safe query generation
+- **HTML Sanitizer**: [`bluemonday`](https://github.com/microcosm-cc/bluemonday)
+- **Deployment**:
+  - Hosted on [`Render`](https://render.com/)
   - Database on [`Neon`](https://neon.com/)
