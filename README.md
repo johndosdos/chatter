@@ -1,6 +1,6 @@
 # Chatter
 
-Chatter is a simple, real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
+Chatter is a real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
 
 The app is deployed on `Render` and uses `Neon`, a serverless PostgreSQL database for message persistence.
 
@@ -10,9 +10,12 @@ Access the live app [`here`](https://chat-app-wgpp.onrender.com).
 When visiting, you’ll be prompted to enter a username. After that, you’ll join the chatroom and can start sending messages immediately.
 
 ## Features
-- **Real-Time Messaging**: Messages are sent and received instantly without refreshing the page, powered by WebSockets.
+- **Real-Time Messaging**: Messages are sent and received instantly without refreshing the page.
 - **Persistent Chat History**: Messages are stored in PostgreSQL and loaded when a new user joins.
 - **Simple User Interface**: Clean, minimal UI built with Tailwind CSS.
+
+## Why did I make this app?
+I wanted to understand how **real-time messaging** works. The idea that people can communicate with each other anywhere in the world, in real-time, feels like magic to me. This curiousity about the technology behind that magic is what drove me to build this app.
 
 ## How It Works
 The application uses a modern stack for real-time communication.
