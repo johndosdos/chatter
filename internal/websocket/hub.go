@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/johndosdos/chat-app/internal/chat"
-	"github.com/johndosdos/chat-app/internal/database"
+	"github.com/johndosdos/chatter/internal/chat"
+	"github.com/johndosdos/chatter/internal/database"
 	"github.com/microcosm-cc/bluemonday"
 )
 

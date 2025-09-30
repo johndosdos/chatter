@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
-	"github.com/johndosdos/chat-app/internal/chat"
-	"github.com/johndosdos/chat-app/internal/database"
-	ws "github.com/johndosdos/chat-app/internal/websocket"
+	"github.com/johndosdos/chatter/internal/chat"
+	"github.com/johndosdos/chatter/internal/database"
+	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
 func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerFunc {

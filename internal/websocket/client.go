@@ -8,8 +8,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	components "github.com/johndosdos/chat-app/components/chat"
-	"github.com/johndosdos/chat-app/internal/chat"
+	components "github.com/johndosdos/chatter/components/chat"
+	"github.com/johndosdos/chatter/internal/chat"
 )
 
 type Client struct {

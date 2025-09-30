@@ -10,10 +10,10 @@ import (
 	"github.com/a-h/templ"
 	"github.com/jackc/pgx/v5/pgxpool"
 	components "github.com/johndosdos/chat-app/components/chat"
-	"github.com/johndosdos/chat-app/internal/database"
+	"github.com/johndosdos/chatter/internal/database"
 
-	"github.com/johndosdos/chat-app/internal/handler"
-	ws "github.com/johndosdos/chat-app/internal/websocket"
+	"github.com/johndosdos/chatter/internal/handler"
+	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
 var (

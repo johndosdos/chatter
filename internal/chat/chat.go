@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/johndosdos/chat-app/internal/database"
+	"github.com/johndosdos/chatter/internal/database"
 )
 
 type Message struct {
