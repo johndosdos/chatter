@@ -1,22 +1,24 @@
 # Chatter
 
-Chatter is a simple, real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
+Chatter is a real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
 
 The app is deployed on `Render` and uses `Neon`, a serverless PostgreSQL database for message persistence.
 
-## Live Demo
+## Quick Start
 Access the live app [`here`](https://chat-app-wgpp.onrender.com).  
 
-When visiting, you’ll be prompted to enter a username. After that, you’ll join the chatroom and can start sending messages immediately.
-
 ## Features
-- **Real-Time Messaging**: Messages are sent and received instantly without refreshing the page, powered by WebSockets.
+- **Real-Time Messaging**: Messages are sent and received instantly without refreshing the page.
 - **Persistent Chat History**: Messages are stored in PostgreSQL and loaded when a new user joins.
 - **Simple User Interface**: Clean, minimal UI built with Tailwind CSS.
 
-## How It Works
-The application uses a modern stack for real-time communication.
+## Motivation
+I wanted to understand how **real-time messaging** works. The idea that people can communicate with each other anywhere in the world, in real-time, feels like magic to me. This curiousity about the technology behind that magic is what drove me to build this app.
 
+## Usage
+You’ll be prompted to enter a username when visiting for the first time. After that, you’ll join the chatroom and can start sending messages immediately.
+
+## How It Works
 1. **Frontend**:
    Built with the Go package `a-h/templ` for server-side templating and `htmx` for dynamic UI updates. When a user sends a message, htmx sends the content through a WebSocket connection.
 
@@ -30,10 +32,14 @@ The application uses a modern stack for real-time communication.
    A serverless PostgreSQL instance on Neon stores all messages, providing persistent chat history.
 
 ## Technologies Used
-- **Backend**: [`Go`](https://go.dev/)  
-- **Frontend**: [`templ`](https://github.com/a-h/templ), [`htmx`](https://htmx.org/), [`Tailwind CSS`](https://tailwindcss.com/)  
-- **Real-Time Communication**: WebSockets ([`gorilla/websocket`](https://github.com/gorilla/websocket))  
-- **Database**: PostgreSQL with [`sqlc`](https://sqlc.dev/) for type-safe query generation  
-- **Deployment**:  
-  - Hosted on [`Render`](https://render.com/)  
+- **Backend**: [`Go`](https://go.dev/)
+- **Frontend**: [`templ`](https://github.com/a-h/templ), [`htmx`](https://htmx.org/), [`Tailwind CSS`](https://tailwindcss.com/)
+- **Real-Time Communication**: WebSockets ([`gorilla/websocket`](https://github.com/gorilla/websocket))
+- **Database**: PostgreSQL with [`sqlc`](https://sqlc.dev/) for type-safe query generation
+- **HTML Sanitizer**: [`bluemonday`](https://github.com/microcosm-cc/bluemonday)
+- **Deployment**:
+  - Hosted on [`Render`](https://render.com/)
   - Database on [`Neon`](https://neon.com/)
+ 
+## Contributing
+Thank you! Feel free to issue a pull request or raise an issue.
