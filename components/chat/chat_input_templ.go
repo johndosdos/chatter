@@ -29,7 +29,7 @@ func ChatInput() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 absolute bottom-0 left-0 right-0\"><form id=\"form\" class=\"flex w-full\" hx-trigger=\"submit\" hx-include=\"[name='content']\" ws-send hx-on::ws-after-send=\"this.reset()\"><input type=\"text\" name=\"content\" placeholder=\"Type a message...\" class=\"flex-1 px-4 py-2 mr-2 text-base rounded-full border-transparent bg-zinc-800 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200\"> <button type=\"submit\" id=\"send-button\" class=\"bg-zinc-700 text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-blue-600 active:bg-blue-800 transition-all duration-200\">Send</button></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 py-8 absolute bottom-0 left-0 right-0\"><form id=\"form\" class=\"flex w-full\" hx-trigger=\"submit\" hx-include=\"[name='content']\" ws-send hx-on::ws-after-send=\"this.reset()\"><input type=\"text\" name=\"content\" placeholder=\"Type a message...\" class=\"flex-1 px-4 py-2 mr-2 text-base rounded-full border-transparent bg-zinc-800 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200\"> <button type=\"submit\" id=\"send-button\" class=\"bg-zinc-700 text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-blue-600 active:bg-blue-800 transition-all duration-200\">Send</button></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

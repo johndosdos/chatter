@@ -139,7 +139,7 @@ func MessageArea() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"message-area\" class=\"flex-1 p-4 overflow-y-auto space-y-4 pb-24\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div id=\"message-area\" class=\"flex-1 p-4 overflow-y-auto space-y-4 pt-8 pb-24\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

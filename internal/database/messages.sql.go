@@ -12,30 +12,23 @@ import (
 )
 
 const createMessage = `-- name: CreateMessage :one
-INSERT INTO messages (user_id, username, content, created_at)
-VALUES ($1, $2, $3, $4)
-RETURNING id, user_id, username, content, created_at
+INSERT INTO messages (user_id, content, created_at)
+VALUES ($1, $2, $3)
+RETURNING id, user_id, content, created_at
 `
 
 type CreateMessageParams struct {
 	UserID    pgtype.UUID
-	Username  string
 	Content   string
 	CreatedAt pgtype.Timestamp
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
-	row := q.db.QueryRow(ctx, createMessage,
-		arg.UserID,
-		arg.Username,
-		arg.Content,
-		arg.CreatedAt,
-	)
+	row := q.db.QueryRow(ctx, createMessage, arg.UserID, arg.Content, arg.CreatedAt)
 	var i Message
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.Username,
 		&i.Content,
 		&i.CreatedAt,
 	)
@@ -43,26 +36,32 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 }
 
 const listMessages = `-- name: ListMessages :many
-SELECT id, user_id, username, content, created_at FROM messages
-ORDER BY created_at ASC
-LIMIT 50
+SELECT t1.user_id, t1.content, t1.created_at, t2.username
+FROM messages t1
+JOIN users t2 ON t1.user_id = t2.user_id
 `
 
-func (q *Queries) ListMessages(ctx context.Context) ([]Message, error) {
+type ListMessagesRow struct {
+	UserID    pgtype.UUID
+	Content   string
+	CreatedAt pgtype.Timestamp
+	Username  string
+}
+
+func (q *Queries) ListMessages(ctx context.Context) ([]ListMessagesRow, error) {
 	rows, err := q.db.Query(ctx, listMessages)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Message
+	var items []ListMessagesRow
 	for rows.Next() {
-		var i Message
+		var i ListMessagesRow
 		if err := rows.Scan(
-			&i.ID,
 			&i.UserID,
-			&i.Username,
 			&i.Content,
 			&i.CreatedAt,
+			&i.Username,
 		); err != nil {
 			return nil, err
 		}

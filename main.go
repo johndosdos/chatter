@@ -9,7 +9,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/jackc/pgx/v5/pgxpool"
-	components "github.com/johndosdos/chat-app/components/chat"
+	components "github.com/johndosdos/chatter/components/chat"
 	"github.com/johndosdos/chatter/internal/database"
 
 	"github.com/johndosdos/chatter/internal/handler"

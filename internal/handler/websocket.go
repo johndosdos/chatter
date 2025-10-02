@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/johndosdos/chatter/internal/chat"
 	"github.com/johndosdos/chatter/internal/database"
@@ -32,8 +33,20 @@ func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerF
 		c := ws.NewClient(conn)
 		c.Username = username
 		c.Userid = userid
-		h.Register <- c
 
+		// Create a new user entity in the database.
+		// If user creation in the database should fail, it doesn't make
+		// sense if we proceed to hub registration.
+		err = db.CreateUser(ctx, database.CreateUserParams{
+			UserID:   pgtype.UUID{Bytes: [16]byte(c.Userid), Valid: true},
+			Username: c.Username,
+		})
+		if err != nil {
+			log.Printf("[DB error] failed to create user: %v", err)
+			return
+		}
+
+		h.Register <- c
 		// Ok is a signalling channel from our hub, indicating if register was
 		// successful.
 		<-h.Ok

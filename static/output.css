@@ -219,11 +219,11 @@
   .flex {
     display: flex;
   }
-  .h-20 {
-    height: calc(var(--spacing) * 20);
+  .h-8 {
+    height: calc(var(--spacing) * 8);
   }
-  .h-32 {
-    height: calc(var(--spacing) * 32);
+  .h-24 {
+    height: calc(var(--spacing) * 24);
   }
   .h-dvh {
     height: 100dvh;
@@ -325,6 +325,12 @@
   }
   .py-2 {
     padding-block: calc(var(--spacing) * 2);
+  }
+  .py-8 {
+    padding-block: calc(var(--spacing) * 8);
+  }
+  .pt-8 {
+    padding-top: calc(var(--spacing) * 8);
   }
   .pb-24 {
     padding-bottom: calc(var(--spacing) * 24);
