@@ -9,6 +9,7 @@ templ ChatInput() {
 			class="flex w-full"
 			hx-trigger="submit"
 			hx-include="[name='content']"
+			hx-on::ws-config-send="if (this.elements.content.value.trim() === '') event.preventDefault()"
 			ws-send
 			hx-on::ws-after-send="this.reset()"
 		>
