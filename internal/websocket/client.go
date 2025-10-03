@@ -28,6 +28,10 @@ func NewClient(conn *websocket.Conn) *Client {
 }
 
 func (c *Client) WriteMessage() {
+	// In order to group messages by sender, we need to reference the
+	// previous message. We can achieve this by setting the current
+	// message as the previous after processing.
+	var prevMsg chat.Message
 	for {
 		message, ok := <-c.Recv
 		if !ok {
@@ -42,16 +46,24 @@ func (c *Client) WriteMessage() {
 			break
 		}
 
+		// Check if current and previous messages have the same userid.
+		sameUser := false
+		if message.Userid == prevMsg.Userid {
+			sameUser = true
+		}
+
 		// Render message as sender or receiver.
 		var content templ.Component
 		if message.Userid == c.Userid {
-			content = components.SenderBubble(message.Content, c.Username)
+			content = components.SenderBubble(&message, sameUser)
 		} else {
-			content = components.ReceiverBubble(message.Content, message.Username)
+			content = components.ReceiverBubble(&message, sameUser)
 		}
 		content.Render(context.Background(), w)
 
 		w.Close()
+
+		prevMsg = message
 	}
 }
 

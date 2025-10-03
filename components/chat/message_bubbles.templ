@@ -1,23 +1,37 @@
 package components
 
-templ ReceiverBubble(message, from string) {
+import "github.com/johndosdos/chatter/internal/chat"
+
+templ ReceiverBubble(message *chat.Message, sameUser bool) {
 	<div hx-swap-oob="beforeend:#message-area">
 		<div class="flex flex-col items-start">
-			<div class="text-xs text-gray-500 mb-1 ml-3">{ from }</div>
-			<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
-				<p>{ message }</p>
-			</div>
+			if sameUser {
+				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
+					<p>{ message.Content }</p>
+				</div>
+			} else {
+				<div class="text-xs text-gray-500 mt-6 mb-1 ml-3">{ message.Username }</div>
+				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
+					<p>{ message.Content }</p>
+				</div>
+			}
 		</div>
 	</div>
 }
 
-templ SenderBubble(message, from string) {
+templ SenderBubble(message *chat.Message, sameUser bool) {
 	<div hx-swap-oob="beforeend:#message-area">
 		<div class="flex flex-col items-end">
-			<div class="text-xs text-gray-500 mb-1 mr-3">{ from }</div>
-			<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
-				<p>{ message }</p>
-			</div>
+			if sameUser {
+				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
+					<p>{ message.Content }</p>
+				</div>
+			} else {
+				<div class="text-xs text-gray-500 mt-6 mb-1 mr-3">{ message.Username }</div>
+				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
+					<p>{ message.Content }</p>
+				</div>
+			}
 		</div>
 	</div>
 }
@@ -25,6 +39,6 @@ templ SenderBubble(message, from string) {
 templ MessageArea() {
 	<div
 		id="message-area"
-		class="flex-1 p-4 overflow-y-auto space-y-4 pt-8 pb-24"
+		class="flex-1 p-4 overflow-y-auto space-y-1 pt-8 pb-24"
 	></div>
 }
