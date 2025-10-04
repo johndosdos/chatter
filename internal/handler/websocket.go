@@ -51,6 +51,9 @@ func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerF
 		// successful.
 		<-h.Ok
 
+		// Try to keep the connection alive.
+		go chat.KeepaliveConn(conn)
+
 		// Run these goroutines to listen and process messages from other
 		// clients.
 		go c.WriteMessage()
