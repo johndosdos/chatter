@@ -14,7 +14,7 @@ import (
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (user_id, content, created_at)
 VALUES ($1, $2, $3)
-RETURNING id, user_id, content, created_at
+RETURNING user_id, content, created_at
 `
 
 type CreateMessageParams struct {
@@ -26,12 +26,7 @@ type CreateMessageParams struct {
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
 	row := q.db.QueryRow(ctx, createMessage, arg.UserID, arg.Content, arg.CreatedAt)
 	var i Message
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Content,
-		&i.CreatedAt,
-	)
+	err := row.Scan(&i.UserID, &i.Content, &i.CreatedAt)
 	return i, err
 }
 
