@@ -1,42 +1,41 @@
 package components
 
 import (
-	"github.com/johndosdos/chatter/internal/chat"
 	"time"
 )
 
-templ ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) {
+templ ReceiverBubble(username, content string, sameUser bool, createdAt time.Time) {
 	<div
 		hx-swap-oob="beforeend:#message-area"
 	>
 		<div data-timestamp={ createdAt.Format(time.RFC3339) } class="flex flex-col items-start">
 			if sameUser {
 				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
-					<p>{ message.Content }</p>
+					<p>{ content }</p>
 				</div>
 			} else {
-				<div class="text-xs text-gray-500 mt-6 mb-1 ml-3">{ message.Username }</div>
+				<div class="text-xs text-gray-500 mt-6 mb-1 ml-3">{ username }</div>
 				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
-					<p>{ message.Content }</p>
+					<p>{ content }</p>
 				</div>
 			}
 		</div>
 	</div>
 }
 
-templ SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) {
+templ SenderBubble(username, content string, sameUser bool, createdAt time.Time) {
 	<div
 		hx-swap-oob="beforeend:#message-area"
 	>
 		<div data-timestamp={ createdAt.Format(time.RFC3339) } class="flex flex-col items-end">
 			if sameUser {
 				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
-					<p>{ message.Content }</p>
+					<p>{ content }</p>
 				</div>
 			} else {
-				<div class="text-xs text-gray-500 mt-6 mb-1 mr-3">{ message.Username }</div>
+				<div class="text-xs text-gray-500 mt-6 mb-1 mr-3">{ username }</div>
 				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
-					<p>{ message.Content }</p>
+					<p>{ content }</p>
 				</div>
 			}
 		</div>

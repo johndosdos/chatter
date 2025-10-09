@@ -9,11 +9,10 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/johndosdos/chatter/internal/chat"
 	"time"
 )
 
-func ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) templ.Component {
+func ReceiverBubble(username, content string, sameUser bool, createdAt time.Time) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,7 +40,7 @@ func ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) t
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(createdAt.Format(time.RFC3339))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 12, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 11, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -57,9 +56,9 @@ func ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) t
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(message.Content)
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 15, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 14, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -75,9 +74,9 @@ func ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) t
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var4 string
-			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(message.Username)
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(username)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 18, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 17, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -88,9 +87,9 @@ func ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) t
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(message.Content)
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 20, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 19, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -109,7 +108,7 @@ func ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) t
 	})
 }
 
-func SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) templ.Component {
+func SenderBubble(username, content string, sameUser bool, createdAt time.Time) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -137,7 +136,7 @@ func SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) tem
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(createdAt.Format(time.RFC3339))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 31, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 30, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -153,9 +152,9 @@ func SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) tem
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(message.Content)
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 34, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 33, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -171,9 +170,9 @@ func SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) tem
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(message.Username)
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(username)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 37, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 36, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -184,9 +183,9 @@ func SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) tem
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(message.Content)
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(content)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 39, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/message_bubbles.templ`, Line: 38, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {

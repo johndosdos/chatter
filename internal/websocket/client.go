@@ -56,9 +56,9 @@ func (c *Client) WriteMessage() {
 		// Render message as sender or receiver.
 		var content templ.Component
 		if message.Userid == c.Userid {
-			content = components.SenderBubble(&message, sameUser, message.CreatedAt)
+			content = components.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 		} else {
-			content = components.ReceiverBubble(&message, sameUser, message.CreatedAt)
+			content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 		}
 		content.Render(context.Background(), w)
 
