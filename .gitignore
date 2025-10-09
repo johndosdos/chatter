@@ -2,3 +2,5 @@ node_modules
 tmp
 .env.development
 .env.keys
+.kilocodemodes
+.vscode
