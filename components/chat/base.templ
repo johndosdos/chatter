@@ -39,16 +39,33 @@ templ Base() {
 					localStorage.setItem("userid", userid);
 				}
 
+				// HTTP GET "/messages" BEGIN
+				//
+				// Load chat history using a GET request before initializing websockets.
+				// This is to prevent issues regarding resending chat history on
+				// websocket reconnection.
+				const initialURL = new URL("/messages", window.location.origin);
+				initialURL.searchParams.set("userid", userid);
+
+				const messageArea = document.querySelector("div[hx-get]");
+				if (messageArea) {
+				messageArea.setAttribute("hx-get", initialURL.toString());
+				}
+				//
+				// HTTP GET END
+
+				// WEBSOCKET BEGIN
+				//
 				// We must inject username and uuid into the websocket URL before it makes its first
 				// request to the server.
-				let tempURL = new URL("/ws", window.location.origin);
-				tempURL.searchParams.append("userid", userid);
-				tempURL.searchParams.append("username", username);
-				let wsURL = tempURL.toString();
+				const wsURL = new URL("/ws", window.location.origin);
+				wsURL.searchParams.set("userid", userid);
+				wsURL.searchParams.set("username", username);
 
-				let chatWindow = document.querySelector("div[ws-connect]");
+
+				const chatWindow = document.querySelector("div[ws-connect]");
 				if (chatWindow) {
-					chatWindow.setAttribute("ws-connect", wsURL);
+					chatWindow.setAttribute("ws-connect", wsURL.toString());
 				}
 
 				// Add auto-scroll mechanism on new messages, with animation.
@@ -56,6 +73,8 @@ templ Base() {
 					let el = document.getElementById("message-area");
 					el.scroll({ top: el.scrollHeight, behavior: "smooth" })
 				});
+				//
+				// WEBSOCKET END
 			</script>
 		</body>
 	</html>

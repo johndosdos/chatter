@@ -48,6 +48,11 @@ func main() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.Handle("/", templ.Handler(components.Base()))
+
+	// Load chat history on HTTP GET on initial connection before starting websockets.
+	// This is to prevent issues regarding resending chat history on websocket reconnection.
+	http.HandleFunc("/messages", handler.ServeMessages(ctx, dbQueries))
+
 	http.HandleFunc("/ws", handler.ServeWs(ctx, hub, dbQueries))
 
 	defer dbConn.Close()

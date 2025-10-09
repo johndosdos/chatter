@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -55,9 +56,9 @@ func (c *Client) WriteMessage() {
 		// Render message as sender or receiver.
 		var content templ.Component
 		if message.Userid == c.Userid {
-			content = components.SenderBubble(&message, sameUser)
+			content = components.SenderBubble(&message, sameUser, message.CreatedAt)
 		} else {
-			content = components.ReceiverBubble(&message, sameUser)
+			content = components.ReceiverBubble(&message, sameUser, message.CreatedAt)
 		}
 		content.Render(context.Background(), w)
 
@@ -84,9 +85,11 @@ func (c *Client) ReadMessage() {
 
 		// We need to unmarshal the JSON sent from the client side. HTMX's ws-send
 		// attribute will also send a HEADERS field along with the client message.
+		// Also, set CreatedAt to the current time.
 		message := chat.Message{
-			Userid:   c.Userid,
-			Username: c.Username,
+			Userid:    c.Userid,
+			Username:  c.Username,
+			CreatedAt: time.Now(),
 		}
 		err = json.Unmarshal(p, &message)
 		if err != nil {

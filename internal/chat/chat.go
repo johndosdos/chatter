@@ -40,7 +40,6 @@ func DbLoadChatHistory(ctx context.Context, recv chan Message, db *database.Quer
 		case <-ctx.Done():
 			return
 		}
-
 	}
 }
 

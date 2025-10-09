@@ -1,10 +1,15 @@
 package components
 
-import "github.com/johndosdos/chatter/internal/chat"
+import (
+	"github.com/johndosdos/chatter/internal/chat"
+	"time"
+)
 
-templ ReceiverBubble(message *chat.Message, sameUser bool) {
-	<div hx-swap-oob="beforeend:#message-area">
-		<div class="flex flex-col items-start">
+templ ReceiverBubble(message *chat.Message, sameUser bool, createdAt time.Time) {
+	<div
+		hx-swap-oob="beforeend:#message-area"
+	>
+		<div data-timestamp={ createdAt.Format(time.RFC3339) } class="flex flex-col items-start">
 			if sameUser {
 				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
 					<p>{ message.Content }</p>
@@ -19,9 +24,11 @@ templ ReceiverBubble(message *chat.Message, sameUser bool) {
 	</div>
 }
 
-templ SenderBubble(message *chat.Message, sameUser bool) {
-	<div hx-swap-oob="beforeend:#message-area">
-		<div class="flex flex-col items-end">
+templ SenderBubble(message *chat.Message, sameUser bool, createdAt time.Time) {
+	<div
+		hx-swap-oob="beforeend:#message-area"
+	>
+		<div data-timestamp={ createdAt.Format(time.RFC3339) } class="flex flex-col items-end">
 			if sameUser {
 				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
 					<p>{ message.Content }</p>
@@ -39,6 +46,9 @@ templ SenderBubble(message *chat.Message, sameUser bool) {
 templ MessageArea() {
 	<div
 		id="message-area"
+		hx-get="/messages"
+		hx-trigger="load"
+		hx-swap="afterbegin"
 		class="flex-1 p-4 overflow-y-auto space-y-1 pt-8 pb-24"
 	></div>
 }
