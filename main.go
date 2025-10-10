@@ -7,13 +7,12 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/a-h/templ"
 	"github.com/jackc/pgx/v5/pgxpool"
-	components "github.com/johndosdos/chatter/components/chat"
+
 	"github.com/johndosdos/chatter/internal/database"
+	ws "github.com/johndosdos/chatter/internal/websocket"
 
 	"github.com/johndosdos/chatter/internal/handler"
-	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
 var (
@@ -47,13 +46,14 @@ func main() {
 
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
-	http.Handle("/", templ.Handler(components.Base()))
+	http.Handle("/", http.RedirectHandler("/login", http.StatusSeeOther))
+	http.Handle("/login", handler.ServeLogin(ctx))
 
 	// Load chat history on HTTP GET on initial connection before starting websockets.
 	// This is to prevent issues regarding resending chat history on websocket reconnection.
-	http.HandleFunc("/messages", handler.ServeMessages(ctx, dbQueries))
+	http.Handle("/messages", handler.ServeMessages(ctx, dbQueries))
 
-	http.HandleFunc("/ws", handler.ServeWs(ctx, hub, dbQueries))
+	http.Handle("/ws", handler.ServeWs(ctx, hub, dbQueries))
 
 	defer dbConn.Close()
 
