@@ -1,0 +1,27 @@
+package components
+
+templ Base() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Chat app</title>
+			<link rel="stylesheet" href="/static/output.css"/>
+			<script src="/static/htmx.min.js"></script>
+			<script src="/static/htmx-ext-ws.js"></script>
+			<style>
+				#message-area::-webkit-scrollbar {
+					display: none;
+				}
+				#message-area {
+					-ms-overflow-style: none;
+					scrollbar-width: none;
+				}
+			</style>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}

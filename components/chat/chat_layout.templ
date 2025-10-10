@@ -1,0 +1,65 @@
+package chat
+
+import "github.com/johndosdos/chatter/components"
+
+templ ChatLayout() {
+	@components.Base() {
+		<div class="bg-zinc-950 flex items-center justify-center font-sans">
+			@ChatWindow()
+			// Here, we ask clients for their username through the window.prompt() method.
+			// We'll also be using local storage to store their usernames in the browser.
+			<script>
+				// Check if a username is stored in the local storage.
+				let username = localStorage.getItem("username");
+				if (!username) {
+					username = prompt("Please enter a username:", "Anonymous");
+					localStorage.setItem("username", username);
+				}
+
+				// Create uuid for each connection.
+				let userid = localStorage.getItem("userid");
+				if (!userid) {
+					userid = crypto.randomUUID();
+					localStorage.setItem("userid", userid);
+				}
+
+				// HTTP GET "/messages" BEGIN
+				//
+				// Load chat history using a GET request before initializing websockets.
+				// This is to prevent issues regarding resending chat history on
+				// websocket reconnection.
+				const initialURL = new URL("/messages", window.location.origin);
+				initialURL.searchParams.set("userid", userid);
+
+				const messageArea = document.querySelector("div[hx-get]");
+				if (messageArea) {
+				messageArea.setAttribute("hx-get", initialURL.toString());
+				}
+				//
+				// HTTP GET END
+
+				// WEBSOCKET BEGIN
+				//
+				// We must inject username and uuid into the websocket URL before it makes its first
+				// request to the server.
+				const wsURL = new URL("/ws", window.location.origin);
+				wsURL.searchParams.set("userid", userid);
+				wsURL.searchParams.set("username", username);
+
+
+				const chatWindow = document.querySelector("div[ws-connect]");
+				if (chatWindow) {
+					chatWindow.setAttribute("ws-connect", wsURL.toString());
+				}
+
+				// Add auto-scroll mechanism on new messages, with animation.
+				document.body.addEventListener("htmx:oobAfterSwap", () => {
+					let el = document.getElementById("message-area");
+					el.scroll({ top: el.scrollHeight, behavior: "smooth" })
+				});
+				//
+				// WEBSOCKET END
+			</script>
+		</div>
+	}
+}
