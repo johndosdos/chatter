@@ -12,3 +12,9 @@ func ServeLogin(ctx context.Context) http.HandlerFunc {
 		auth.Login().Render(ctx, w)
 	}
 }
+
+func ServeSignup(ctx context.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		auth.Signup().Render(ctx, w)
+	}
+}

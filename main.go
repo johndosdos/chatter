@@ -46,8 +46,9 @@ func main() {
 
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
-	http.Handle("/", http.RedirectHandler("/login", http.StatusSeeOther))
-	http.Handle("/login", handler.ServeLogin(ctx))
+	http.Handle("/", http.RedirectHandler("/account/login", http.StatusSeeOther))
+	http.Handle("/account/login", handler.ServeLogin(ctx))
+	http.Handle("/account/signup", handler.ServeSignup(ctx))
 
 	// Load chat history on HTTP GET on initial connection before starting websockets.
 	// This is to prevent issues regarding resending chat history on websocket reconnection.
