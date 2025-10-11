@@ -2,6 +2,10 @@ package auth
 
 import "github.com/johndosdos/chatter/components"
 
+templ Error(message string) {
+	<span>{ message }</span>
+}
+
 templ Signup() {
 	@components.Base() {
 		<main id="auth-container" class="bg-zinc-950 flex items-center justify-center min-h-screen font-sans">
@@ -23,6 +27,8 @@ templ Signup() {
 								id="username"
 								name="username"
 								autocomplete="username"
+								minlength="4"
+								maxlength="16"
 								required
 								autofocus
 								placeholder="Choose a username"

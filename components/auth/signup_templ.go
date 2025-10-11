@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/johndosdos/chatter/components"
 
-func Signup() templ.Component {
+func Error(message string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -31,7 +31,49 @@ func Signup() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<span>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(message)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/auth/signup.templ`, Line: 6, Col: 16}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</span>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func Signup() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
 			if !templ_7745c5c3_IsBuffer {
@@ -43,13 +85,13 @@ func Signup() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"auth-container\" class=\"bg-zinc-950 flex items-center justify-center min-h-screen font-sans\"><section class=\"w-full px-4 sm:px-6 lg:px-0 flex justify-center\"><div class=\"w-full max-w-lg bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10\"><h1 class=\"text-2xl sm:text-3xl font-bold text-gray-200 mb-1 text-center\">Create your account</h1><p class=\"text-gray-400 text-center mb-6 sm:mb-8 text-sm sm:text-base\">Join Chatter and start talking</p><form hx-post=\"/account/signup\" hx-trigger=\"submit\" hx-target=\"#error-message\" hx-swap=\"innerHTML\" class=\"grid gap-4\"><div class=\"grid gap-2\"><label for=\"username\" class=\"text-sm font-medium text-gray-400\">Username</label> <input type=\"text\" id=\"username\" name=\"username\" autocomplete=\"username\" required autofocus placeholder=\"Choose a username\" class=\"w-full px-4 py-3 rounded-2xl border border-transparent bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-150\"></div><div class=\"grid gap-2\"><label for=\"password\" class=\"text-sm font-medium text-gray-400\">Password</label> <input type=\"password\" id=\"password\" name=\"password\" autocomplete=\"new-password\" minlength=\"8\" required placeholder=\"Create a password\" class=\"w-full px-4 py-3 rounded-2xl border border-transparent bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-150\"></div><div class=\"grid gap-2\"><label for=\"confirm_password\" class=\"text-sm font-medium text-gray-400\">Confirm password</label> <input type=\"password\" id=\"confirm_password\" name=\"confirm_password\" autocomplete=\"new-password\" minlength=\"8\" required placeholder=\"Repeat your password\" class=\"w-full px-4 py-3 rounded-2xl border border-transparent bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-150\"></div><div id=\"error-message\" class=\"text-red-400 text-sm text-center min-h-[24px]\"></div><button type=\"submit\" class=\"w-full mt-1 bg-zinc-700 text-white px-5 py-3 rounded-full font-semibold shadow-md hover:bg-blue-600 active:bg-blue-800 transition-all duration-150\">Create account</button></form><p class=\"mt-6 text-center text-sm text-gray-400\">Already have an account? <a href=\"#\" hx-get=\"/account/login\" hx-target=\"#auth-container\" hx-swap=\"outerHTML\" hx-push-url=\"true\" class=\"ml-2 text-blue-500 hover:text-gray-200 transition-colors duration-150\">Sign in</a></p></div></section></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<main id=\"auth-container\" class=\"bg-zinc-950 flex items-center justify-center min-h-screen font-sans\"><section class=\"w-full px-4 sm:px-6 lg:px-0 flex justify-center\"><div class=\"w-full max-w-lg bg-zinc-900 rounded-3xl shadow-2xl p-6 sm:p-8 md:p-10\"><h1 class=\"text-2xl sm:text-3xl font-bold text-gray-200 mb-1 text-center\">Create your account</h1><p class=\"text-gray-400 text-center mb-6 sm:mb-8 text-sm sm:text-base\">Join Chatter and start talking</p><form hx-post=\"/account/signup\" hx-trigger=\"submit\" hx-target=\"#error-message\" hx-swap=\"innerHTML\" class=\"grid gap-4\"><div class=\"grid gap-2\"><label for=\"username\" class=\"text-sm font-medium text-gray-400\">Username</label> <input type=\"text\" id=\"username\" name=\"username\" autocomplete=\"username\" minlength=\"4\" maxlength=\"16\" required autofocus placeholder=\"Choose a username\" class=\"w-full px-4 py-3 rounded-2xl border border-transparent bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-150\"></div><div class=\"grid gap-2\"><label for=\"password\" class=\"text-sm font-medium text-gray-400\">Password</label> <input type=\"password\" id=\"password\" name=\"password\" autocomplete=\"new-password\" minlength=\"8\" required placeholder=\"Create a password\" class=\"w-full px-4 py-3 rounded-2xl border border-transparent bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-150\"></div><div class=\"grid gap-2\"><label for=\"confirm_password\" class=\"text-sm font-medium text-gray-400\">Confirm password</label> <input type=\"password\" id=\"confirm_password\" name=\"confirm_password\" autocomplete=\"new-password\" minlength=\"8\" required placeholder=\"Repeat your password\" class=\"w-full px-4 py-3 rounded-2xl border border-transparent bg-zinc-800 text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-150\"></div><div id=\"error-message\" class=\"text-red-400 text-sm text-center min-h-[24px]\"></div><button type=\"submit\" class=\"w-full mt-1 bg-zinc-700 text-white px-5 py-3 rounded-full font-semibold shadow-md hover:bg-blue-600 active:bg-blue-800 transition-all duration-150\">Create account</button></form><p class=\"mt-6 text-center text-sm text-gray-400\">Already have an account? <a href=\"#\" hx-get=\"/account/login\" hx-target=\"#auth-container\" hx-swap=\"outerHTML\" hx-push-url=\"true\" class=\"ml-2 text-blue-500 hover:text-gray-200 transition-colors duration-150\">Sign in</a></p></div></section></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = components.Base().Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.Base().Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
