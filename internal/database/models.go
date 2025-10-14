@@ -23,4 +23,5 @@ type Password struct {
 type User struct {
 	UserID   pgtype.UUID
 	Username string
+	Email    string
 }

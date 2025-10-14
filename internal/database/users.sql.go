@@ -12,20 +12,21 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (user_id, username)
-VALUES ($1, $2)
+INSERT INTO users (user_id, username, email)
+VALUES ($1, $2, $3)
 ON CONFLICT (user_id) DO NOTHING
-RETURNING user_id, username
+RETURNING user_id, username, email
 `
 
 type CreateUserParams struct {
 	UserID   pgtype.UUID
 	Username string
+	Email    string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.UserID, arg.Username)
+	row := q.db.QueryRow(ctx, createUser, arg.UserID, arg.Username, arg.Email)
 	var i User
-	err := row.Scan(&i.UserID, &i.Username)
+	err := row.Scan(&i.UserID, &i.Username, &i.Email)
 	return i, err
 }
