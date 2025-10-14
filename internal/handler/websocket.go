@@ -37,7 +37,7 @@ func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerF
 		// Create a new user entity in the database.
 		// If user creation in the database should fail, it doesn't make
 		// sense if we proceed to hub registration.
-		err = db.CreateUser(ctx, database.CreateUserParams{
+		_, err = db.CreateUser(ctx, database.CreateUserParams{
 			UserID:   pgtype.UUID{Bytes: [16]byte(c.Userid), Valid: true},
 			Username: c.Username,
 		})

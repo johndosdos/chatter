@@ -11,10 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createUser = `-- name: CreateUser :exec
+const createUser = `-- name: CreateUser :one
 INSERT INTO users (user_id, username)
 VALUES ($1, $2)
 ON CONFLICT (user_id) DO NOTHING
+RETURNING user_id, username
 `
 
 type CreateUserParams struct {
@@ -22,7 +23,9 @@ type CreateUserParams struct {
 	Username string
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.Exec(ctx, createUser, arg.UserID, arg.Username)
-	return err
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.UserID, arg.Username)
+	var i User
+	err := row.Scan(&i.UserID, &i.Username)
+	return i, err
 }
