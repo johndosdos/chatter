@@ -14,6 +14,12 @@ type Message struct {
 	CreatedAt pgtype.Timestamp
 }
 
+type Password struct {
+	UserID         pgtype.UUID
+	HashedPassword string
+	CreatedAt      pgtype.Timestamp
+}
+
 type User struct {
 	UserID   pgtype.UUID
 	Username string
