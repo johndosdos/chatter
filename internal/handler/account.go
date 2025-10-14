@@ -43,9 +43,11 @@ func ServeSignup(ctx context.Context, db *database.Queries) http.HandlerFunc {
 		}
 
 		username := r.PostFormValue("username")
+		email := r.PostFormValue("email")
 		user, err := db.CreateUser(ctx, database.CreateUserParams{
 			UserID:   pgtype.UUID{Bytes: uuid.New(), Valid: true},
 			Username: username,
+			Email:    email,
 		})
 		if err != nil {
 			http.Error(w, "Database error.", http.StatusInternalServerError)
