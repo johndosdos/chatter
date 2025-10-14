@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -13,9 +15,46 @@ import (
 	"github.com/johndosdos/chatter/internal/database"
 )
 
-func ServeLogin(ctx context.Context) http.HandlerFunc {
+func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		viewAuth.Login().Render(ctx, w)
+		if r.Method != http.MethodPost {
+			viewAuth.Login().Render(ctx, w)
+		}
+
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Invalid form data.", http.StatusBadRequest)
+			log.Printf("[error] failed to parse form values: %v", err)
+			return
+		}
+
+		email := r.PostFormValue("email")
+		password := r.PostFormValue("password")
+
+		user, err := db.GetUserWithPasswordByEmail(ctx, email)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			viewAuth.Error("Invalid email or password.").Render(ctx, w)
+			return
+		case err != nil:
+			http.Error(w, "Server error.", http.StatusInternalServerError)
+			log.Printf("[error] failed to retrieve user: %v", err)
+			return
+		}
+
+		ok, err := auth.CheckPasswordHash(password, user.HashedPassword)
+		if err != nil {
+			http.Error(w, "Server error.", http.StatusInternalServerError)
+			log.Printf("[error] cannot verify password — hash may be corrupted: %v", err)
+			return
+		}
+		if !ok {
+			viewAuth.Error("Invalid email or password.").Render(ctx, w)
+			return
+		}
+
+		w.Header().Set("HX-Redirect", "/chat")
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
