@@ -9,3 +9,7 @@ SELECT u.*, p.hashed_password
 FROM users AS u
 JOIN passwords AS p ON u.user_id = p.user_id
 WHERE u.email = $1;
+
+-- name: GetUserById :one
+SELECT * FROM users
+WHERE user_id = $1;
