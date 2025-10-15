@@ -7,9 +7,10 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
-	components "github.com/johndosdos/chatter/components/chat"
 	"github.com/johndosdos/chatter/internal/chat"
 	"github.com/johndosdos/chatter/internal/database"
+
+	viewChat "github.com/johndosdos/chatter/components/chat"
 )
 
 // Load recent chat history to current client.
@@ -23,8 +24,6 @@ func ServeMessages(ctx context.Context, db *database.Queries) http.HandlerFunc {
 			log.Printf("[error] failed to load messages from database: %v", err)
 			return
 		}
-
-		w.Header().Set("content-type", "text/html")
 
 		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
 
@@ -43,12 +42,14 @@ func ServeMessages(ctx context.Context, db *database.Queries) http.HandlerFunc {
 				sameUser = true
 			}
 
+			w.Header().Set("Content-Type", "text/html")
+
 			// Render message as sender or receiver.
 			var content templ.Component
 			if message.Userid == userid {
-				content = components.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			} else {
-				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			}
 			content.Render(context.Background(), w)
 
