@@ -274,9 +274,6 @@
       margin-block-end: calc(calc(var(--spacing) * 1) * calc(1 - var(--tw-space-y-reverse)));
     }
   }
-  .overflow-hidden {
-    overflow: hidden;
-  }
   .overflow-y-auto {
     overflow-y: auto;
   }

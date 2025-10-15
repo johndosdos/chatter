@@ -4,3 +4,4 @@ tmp
 .env.keys
 .kilocodemodes
 .vscode
+.repo_ignore
