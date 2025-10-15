@@ -265,6 +265,9 @@
   .min-h-\[24px\] {
     min-height: 24px;
   }
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
   .min-h-screen {
     min-height: 100vh;
   }
