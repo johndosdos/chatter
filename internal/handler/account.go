@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -19,6 +20,7 @@ func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			viewAuth.Login().Render(ctx, w)
+			return
 		}
 
 		err := r.ParseForm()
@@ -53,7 +55,7 @@ func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("HX-Redirect", "/chat")
+		w.Header().Set("HX-Redirect", fmt.Sprintf("/chat?userid=%s", user.UserID))
 		w.WriteHeader(http.StatusOK)
 	}
 }

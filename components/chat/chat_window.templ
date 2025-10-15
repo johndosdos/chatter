@@ -1,13 +1,13 @@
 package chat
 
-templ ChatWindow() {
+templ ChatWindow(userid string) {
 	<div
 		hx-ext="ws"
-		ws-connect="/ws"
+		ws-connect={ "/ws?userid=" + userid }
 		class="w-full h-dvh overscroll-hidden max-w-3xl flex flex-col relative"
 	>
 		<div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-zinc-950 to-transparent pointer-events-none"></div>
-		@MessageArea()
+		@MessageArea(userid)
 		<div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none"></div>
 		@ChatInput()
 	</div>

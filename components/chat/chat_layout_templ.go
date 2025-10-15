@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/johndosdos/chatter/components"
 
-func ChatLayout() templ.Component {
+func ChatLayout(userid string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -47,11 +47,11 @@ func ChatLayout() templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ChatWindow().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ChatWindow(userid).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n\t\t\t\t// Check if a username is stored in the local storage.\n\t\t\t\tlet username = localStorage.getItem(\"username\");\n\t\t\t\tif (!username) {\n\t\t\t\t\tusername = prompt(\"Please enter a username:\", \"Anonymous\");\n\t\t\t\t\tlocalStorage.setItem(\"username\", username);\n\t\t\t\t}\n\n\t\t\t\t// Create uuid for each connection.\n\t\t\t\tlet userid = localStorage.getItem(\"userid\");\n\t\t\t\tif (!userid) {\n\t\t\t\t\tuserid = crypto.randomUUID();\n\t\t\t\t\tlocalStorage.setItem(\"userid\", userid);\n\t\t\t\t}\n\n\t\t\t\t// HTTP GET \"/messages\" BEGIN\n\t\t\t\t//\n\t\t\t\t// Load chat history using a GET request before initializing websockets.\n\t\t\t\t// This is to prevent issues regarding resending chat history on\n\t\t\t\t// websocket reconnection.\n\t\t\t\tconst initialURL = new URL(\"/messages\", window.location.origin);\n\t\t\t\tinitialURL.searchParams.set(\"userid\", userid);\n\n\t\t\t\tconst messageArea = document.querySelector(\"div[hx-get]\");\n\t\t\t\tif (messageArea) {\n\t\t\t\tmessageArea.setAttribute(\"hx-get\", initialURL.toString());\n\t\t\t\t}\n\t\t\t\t//\n\t\t\t\t// HTTP GET END\n\n\t\t\t\t// WEBSOCKET BEGIN\n\t\t\t\t//\n\t\t\t\t// We must inject username and uuid into the websocket URL before it makes its first\n\t\t\t\t// request to the server.\n\t\t\t\tconst wsURL = new URL(\"/ws\", window.location.origin);\n\t\t\t\twsURL.searchParams.set(\"userid\", userid);\n\t\t\t\twsURL.searchParams.set(\"username\", username);\n\n\n\t\t\t\tconst chatWindow = document.querySelector(\"div[ws-connect]\");\n\t\t\t\tif (chatWindow) {\n\t\t\t\t\tchatWindow.setAttribute(\"ws-connect\", wsURL.toString());\n\t\t\t\t}\n\n\t\t\t\t// Add auto-scroll mechanism on new messages, with animation.\n\t\t\t\tdocument.body.addEventListener(\"htmx:oobAfterSwap\", () => {\n\t\t\t\t\tlet el = document.getElementById(\"message-area\");\n\t\t\t\t\tel.scroll({ top: el.scrollHeight, behavior: \"smooth\" })\n\t\t\t\t});\n\t\t\t\t//\n\t\t\t\t// WEBSOCKET END\n\t\t\t</script></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n\t\t\t\t// Add auto-scroll mechanism on new messages, with animation.\n\t\t\t\tdocument.body.addEventListener(\"htmx:oobAfterSwap\", () => {\n\t\t\t\t\tlet el = document.getElementById(\"message-area\");\n\t\t\t\t\tel.scroll({ top: el.scrollHeight, behavior: \"smooth\" })\n\t\t\t\t});\n\t\t\t</script></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

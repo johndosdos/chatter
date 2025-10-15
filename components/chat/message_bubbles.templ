@@ -1,8 +1,6 @@
 package chat
 
-import (
-	"time"
-)
+import "time"
 
 templ ReceiverBubble(username, content string, sameUser bool, createdAt time.Time) {
 	<div
@@ -42,10 +40,10 @@ templ SenderBubble(username, content string, sameUser bool, createdAt time.Time)
 	</div>
 }
 
-templ MessageArea() {
+templ MessageArea(userid string) {
 	<div
 		id="message-area"
-		hx-get="/messages"
+		hx-get={ "/messages?userid=" + userid }
 		hx-trigger="load"
 		hx-swap="afterbegin"
 		class="flex-1 p-4 overflow-y-auto space-y-1 pt-8 pb-24"
