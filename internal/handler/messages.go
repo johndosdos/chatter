@@ -16,6 +16,10 @@ import (
 // Load recent chat history to current client.
 func ServeMessages(ctx context.Context, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			return
+		}
+
 		dbMessageList, err := db.ListMessages(ctx)
 		if err != nil {
 			if ctx.Err() != nil {
