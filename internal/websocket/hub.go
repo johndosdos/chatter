@@ -3,7 +3,6 @@ package websocket
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -56,7 +55,7 @@ func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message 
 		UserID:  pgtype.UUID{Bytes: [16]byte(message.Userid), Valid: true},
 		Content: string(message.Content),
 		CreatedAt: pgtype.Timestamp{
-			Time:             time.Now(),
+			Time:             message.CreatedAt,
 			InfinityModifier: 0,
 			Valid:            true,
 		},
