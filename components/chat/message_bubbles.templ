@@ -6,7 +6,7 @@ templ ReceiverBubble(username, content string, sameUser bool, createdAt time.Tim
 	<div
 		hx-swap-oob="beforeend:#message-area"
 	>
-		<div data-timestamp={ createdAt.Format(time.RFC3339) } class="flex flex-col items-start">
+		<div data-timestamp={ createdAt.Format(time.RFC3339Nano) } class="flex flex-col items-start">
 			if sameUser {
 				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
 					<p>{ content }</p>
@@ -25,7 +25,7 @@ templ SenderBubble(username, content string, sameUser bool, createdAt time.Time)
 	<div
 		hx-swap-oob="beforeend:#message-area"
 	>
-		<div data-timestamp={ createdAt.Format(time.RFC3339) } class="flex flex-col items-end">
+		<div data-timestamp={ createdAt.Format(time.RFC3339Nano) } class="flex flex-col items-end">
 			if sameUser {
 				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
 					<p>{ content }</p>
@@ -45,7 +45,7 @@ templ MessageArea(userid string) {
 		id="message-area"
 		hx-get={ "/messages?userid=" + userid }
 		hx-trigger="load"
-		hx-swap="afterbegin"
+		hx-swap="beforeend"
 		class="flex-1 p-4 overflow-y-auto space-y-1 pt-8 pb-24"
 	></div>
 }
