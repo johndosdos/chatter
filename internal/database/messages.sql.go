@@ -31,22 +31,25 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 }
 
 const listMessages = `-- name: ListMessages :many
-SELECT t1.user_id, t1.content, t1.created_at, t2.username
-FROM messages t1
-JOIN users t2 ON t1.user_id = t2.user_id
-ORDER BY t1.created_at ASC
+SELECT m.user_id, m.content, m.created_at, u.username
+FROM messages m
+JOIN users u ON m.user_id = u.user_id
+WHERE (
+  $1::TIMESTAMPTZ IS NULL OR m.created_at > $1::TIMESTAMPTZ
+)
+ORDER BY m.created_at ASC
 LIMIT 50
 `
 
 type ListMessagesRow struct {
 	UserID    pgtype.UUID
 	Content   string
-	CreatedAt pgtype.Timestamp
+	CreatedAt pgtype.Timestamptz
 	Username  string
 }
 
-func (q *Queries) ListMessages(ctx context.Context) ([]ListMessagesRow, error) {
-	rows, err := q.db.Query(ctx, listMessages)
+func (q *Queries) ListMessages(ctx context.Context, since pgtype.Timestamptz) ([]ListMessagesRow, error) {
+	rows, err := q.db.Query(ctx, listMessages, since)
 	if err != nil {
 		return nil, err
 	}
