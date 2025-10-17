@@ -24,7 +24,7 @@ type Client struct {
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn: conn,
-		Recv: make(chan chat.Message),
+		Recv: make(chan chat.Message, 64),
 	}
 }
 
@@ -34,37 +34,33 @@ func (c *Client) WriteMessage() {
 	// message as the previous after processing.
 	var prevMsg chat.Message
 	for {
-		message, ok := <-c.Recv
-		if !ok {
-			c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-			return
+		for message := range c.Recv {
+			// Invoke a new writer from the current connection.
+			w, err := c.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				log.Printf("[error] %v", err)
+				break
+			}
+
+			// Check if current and previous messages have the same userid.
+			sameUser := false
+			if message.Userid == prevMsg.Userid {
+				sameUser = true
+			}
+
+			// Render message as sender or receiver.
+			var content templ.Component
+			if message.Userid == c.Userid {
+				content = components.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+			} else {
+				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+			}
+			content.Render(context.Background(), w)
+
+			w.Close()
+
+			prevMsg = message
 		}
-
-		// Invoke a new writer from the current connection.
-		w, err := c.conn.NextWriter(websocket.TextMessage)
-		if err != nil {
-			log.Printf("[error] %v", err)
-			break
-		}
-
-		// Check if current and previous messages have the same userid.
-		sameUser := false
-		if message.Userid == prevMsg.Userid {
-			sameUser = true
-		}
-
-		// Render message as sender or receiver.
-		var content templ.Component
-		if message.Userid == c.Userid {
-			content = components.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
-		} else {
-			content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
-		}
-		content.Render(context.Background(), w)
-
-		w.Close()
-
-		prevMsg = message
 	}
 }
 
