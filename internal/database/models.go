@@ -11,13 +11,13 @@ import (
 type Message struct {
 	UserID    pgtype.UUID
 	Content   string
-	CreatedAt pgtype.Timestamp
+	CreatedAt pgtype.Timestamptz
 }
 
 type Password struct {
 	UserID         pgtype.UUID
 	HashedPassword string
-	CreatedAt      pgtype.Timestamp
+	CreatedAt      pgtype.Timestamptz
 }
 
 type User struct {

@@ -20,7 +20,7 @@ RETURNING user_id, content, created_at
 type CreateMessageParams struct {
 	UserID    pgtype.UUID
 	Content   string
-	CreatedAt pgtype.Timestamp
+	CreatedAt pgtype.Timestamptz
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {

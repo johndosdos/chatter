@@ -20,7 +20,7 @@ RETURNING user_id, hashed_password, created_at
 type CreatePasswordParams struct {
 	UserID         pgtype.UUID
 	HashedPassword string
-	CreatedAt      pgtype.Timestamp
+	CreatedAt      pgtype.Timestamptz
 }
 
 func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error) {
