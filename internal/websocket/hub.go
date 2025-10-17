@@ -54,7 +54,7 @@ func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message 
 	_, err := db.CreateMessage(ctx, database.CreateMessageParams{
 		UserID:  pgtype.UUID{Bytes: [16]byte(message.Userid), Valid: true},
 		Content: string(message.Content),
-		CreatedAt: pgtype.Timestamp{
+		CreatedAt: pgtype.Timestamptz{
 			Time:             message.CreatedAt,
 			InfinityModifier: 0,
 			Valid:            true,

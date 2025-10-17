@@ -89,7 +89,7 @@ func (c *Client) ReadMessage() {
 		message := chat.Message{
 			Userid:    c.Userid,
 			Username:  c.Username,
-			CreatedAt: time.Now(),
+			CreatedAt: time.Now().UTC(),
 		}
 		err = json.Unmarshal(p, &message)
 		if err != nil {

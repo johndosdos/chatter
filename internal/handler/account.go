@@ -115,7 +115,7 @@ func ServeSignup(ctx context.Context, db *database.Queries) http.HandlerFunc {
 			_, err := db.CreatePassword(ctx, database.CreatePasswordParams{
 				UserID:         user.UserID,
 				HashedPassword: hashed_pw,
-				CreatedAt:      pgtype.Timestamp{Time: time.Now(), Valid: true},
+				CreatedAt:      pgtype.Timestamptz{Time: time.Now().UTC(), Valid: true},
 			})
 			if err != nil {
 				http.Error(w, "Database error.", http.StatusInternalServerError)

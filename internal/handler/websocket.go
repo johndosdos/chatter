@@ -59,7 +59,7 @@ func KeepaliveConn(conn *websocket.Conn) {
 	// a stale connection. Therefore, we must keep the connection alive by sending
 	// ping pong signals between the server and the client (to simulate network traffic)
 	// within a set deadline.
-	err := conn.SetReadDeadline(time.Now().Add(pongWait))
+	err := conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
 	if err != nil {
 		log.Printf("[error] failed to set read deadline: %v", err)
 		return
@@ -67,7 +67,7 @@ func KeepaliveConn(conn *websocket.Conn) {
 
 	// Reset deadline after receiving pong signal.
 	conn.SetPongHandler(func(appData string) error {
-		return conn.SetReadDeadline(time.Now().Add(pongWait))
+		return conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
 	})
 
 	ticker := time.NewTicker((pongWait * 9) / 10)
