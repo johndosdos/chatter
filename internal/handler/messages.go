@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/johndosdos/chatter/internal/chat"
 	"github.com/johndosdos/chatter/internal/database"
 
@@ -20,16 +22,37 @@ func ServeMessages(ctx context.Context, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		dbMessageList, err := db.ListMessages(ctx)
-		if err != nil {
-			if ctx.Err() != nil {
+		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
+		since := r.URL.Query().Get("since")
+
+		var dbMessageList []database.ListMessagesRow
+		var err error
+
+		if since == "" {
+			dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Valid: false})
+			if err != nil {
+				if ctx.Err() != nil {
+					return
+				}
+				log.Printf("[error] failed to load messages from database: %v", err)
 				return
 			}
-			log.Printf("[error] failed to load messages from database: %v", err)
-			return
-		}
+		} else {
+			t, err := time.Parse(time.RFC3339Nano, since)
+			if err != nil {
+				log.Println(err.Error())
+				return
+			}
 
-		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
+			dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: t, Valid: true})
+			if err != nil {
+				if ctx.Err() != nil {
+					return
+				}
+				log.Printf("[error] failed to load messages from database: %v", err)
+				return
+			}
+		}
 
 		var prevMsg chat.Message
 		for _, msg := range dbMessageList {

@@ -9,11 +9,38 @@ templ ChatLayout(userid string) {
 			// Here, we ask clients for their username through the window.prompt() method.
 			// We'll also be using local storage to store their usernames in the browser.
 			<script>
+				let messageArea = document.getElementById("message-area");
+
 				// Add auto-scroll mechanism on new messages, with animation.
 				document.body.addEventListener("htmx:oobAfterSwap", () => {
-					let el = document.getElementById("message-area");
-					el.scroll({ top: el.scrollHeight, behavior: "smooth" })
+					messageArea.scroll({ top: messageArea.scrollHeight, behavior: "smooth" })
 				});
+
+        let initialLoad = false;
+        document.body.addEventListener("htmx:wsOpen", () => {
+          initialLoad = true;
+        });
+
+        let lastMsg = messageArea?.lastElementChild;
+        let since = lastMsg?.dataset.timestamp;
+        document.body.addEventListener("htmx:wsConnecting", () => {
+          if (!initialLoad) {
+            return;
+          }
+
+          lastMsg = messageArea?.lastElementChild;
+          since = lastMsg?.dataset.timestamp;
+          if (!since) {
+            return
+          }
+
+          let url = new URL("/messages", window.location.origin);
+          let params = new URLSearchParams(window.location.search);
+          url.searchParams.set("userid", params.get("userid"));
+          url.searchParams.set("since", since);
+
+          htmx.ajax("GET", url.toString(), { target: "#message-area", swap: "beforeend" });
+        });
 			</script>
 		</div>
 	}
