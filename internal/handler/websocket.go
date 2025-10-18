@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -40,43 +39,9 @@ func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerF
 		// successful.
 		<-h.Ok
 
-		// Try to keep the connection alive.
-		go KeepaliveConn(conn)
-
 		// Run these goroutines to listen and process messages from other
 		// clients.
 		go c.WriteMessage()
 		go c.ReadMessage()
-	}
-}
-
-func KeepaliveConn(conn *websocket.Conn) {
-	// Ping client every 60s.
-	pongWait := 60 * time.Second
-
-	// The default connection behavior is to wait indefinitely for incoming data.
-	// Firewalls, proxies, and other services have their own system to invalidate
-	// a stale connection. Therefore, we must keep the connection alive by sending
-	// ping pong signals between the server and the client (to simulate network traffic)
-	// within a set deadline.
-	err := conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
-	if err != nil {
-		log.Printf("[error] failed to set read deadline: %v", err)
-		return
-	}
-
-	// Reset deadline after receiving pong signal.
-	conn.SetPongHandler(func(appData string) error {
-		return conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
-	})
-
-	ticker := time.NewTicker((pongWait * 9) / 10)
-
-	for range ticker.C {
-		err := conn.WriteMessage(websocket.PingMessage, nil)
-		if err != nil {
-			log.Printf("[error] failed to send ping signal: %v", err)
-			break
-		}
 	}
 }

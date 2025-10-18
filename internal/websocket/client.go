@@ -21,6 +21,8 @@ type Client struct {
 	Recv     chan chat.Message
 }
 
+const pongWait = 60 * time.Second
+
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn: conn,
@@ -29,16 +31,26 @@ func NewClient(conn *websocket.Conn) *Client {
 }
 
 func (c *Client) WriteMessage() {
+	t := time.NewTicker((pongWait * 9) / 10)
+	defer t.Stop()
+
 	// In order to group messages by sender, we need to reference the
 	// previous message. We can achieve this by setting the current
 	// message as the previous after processing.
 	var prevMsg chat.Message
 	for {
-		for message := range c.Recv {
+		select {
+		case message, ok := <-c.Recv:
+			// Stop the process if the recv channel closed.
+			if !ok {
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
 			// Invoke a new writer from the current connection.
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log.Printf("[error] %v", err)
+				log.Printf("[write error] %v", err)
 				break
 			}
 
@@ -60,6 +72,13 @@ func (c *Client) WriteMessage() {
 			w.Close()
 
 			prevMsg = message
+
+		case <-t.C:
+			err := c.conn.WriteMessage(websocket.PingMessage, nil)
+			if err != nil {
+				log.Printf("[write error] failed to send ping signal: %v", err)
+				return
+			}
 		}
 	}
 }
@@ -67,14 +86,30 @@ func (c *Client) WriteMessage() {
 func (c *Client) ReadMessage() {
 	defer func() {
 		c.Hub.Unregister <- c
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
+
+	// The default connection behavior is to wait indefinitely for incoming data.
+	// Firewalls, proxies, and other services have their own system to invalidate
+	// a stale connection. Therefore, we must keep the connection alive by sending
+	// ping pong signals between the server and the client (to simulate network traffic)
+	// within a set deadline.
+	err := c.conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
+	if err != nil {
+		log.Printf("[conn error] failed to set read deadline: %v", err)
+		return
+	}
+
+	// Reset deadline after receiving pong signal.
+	c.conn.SetPongHandler(func(appData string) error {
+		return c.conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
+	})
 
 	for {
 		_, p, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("[error] %v", err)
+				log.Printf("[conn error] %v", err)
 			}
 			break
 		}
@@ -89,7 +124,7 @@ func (c *Client) ReadMessage() {
 		}
 		err = json.Unmarshal(p, &message)
 		if err != nil {
-			log.Printf("[error] failed to process payload from client: %v", err)
+			log.Printf("[server error] failed to process payload from client: %v", err)
 			break
 		}
 

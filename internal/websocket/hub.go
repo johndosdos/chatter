@@ -35,6 +35,7 @@ func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 			h.Ok <- true
 		case client := <-h.Unregister:
 			delete(h.clients, client.Userid)
+			close(client.Recv)
 		case message := <-h.accept:
 			// We need to sanitize incoming messages to prevent XSS.
 			sanitized := h.sanitizer.Sanitize(message.Content)
