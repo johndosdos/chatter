@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -16,8 +15,10 @@ import (
 	"github.com/johndosdos/chatter/internal/database"
 )
 
-func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
+func ServeLogin(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		if r.Method != http.MethodPost {
 			viewAuth.Login().Render(ctx, w)
 			return
@@ -60,8 +61,10 @@ func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
 	}
 }
 
-func ServeSignup(ctx context.Context, db *database.Queries) http.HandlerFunc {
+func ServeSignup(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+ctx := r.Context()
+
 		if r.Method != http.MethodPost {
 			viewAuth.Signup().Render(ctx, w)
 			return
