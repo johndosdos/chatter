@@ -20,6 +20,15 @@ type Password struct {
 	CreatedAt      pgtype.Timestamptz
 }
 
+type RefreshToken struct {
+	Token     string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	UserID    pgtype.UUID
+	ExpiresAt pgtype.Timestamptz
+	RevokedAt pgtype.Timestamptz
+}
+
 type User struct {
 	UserID   pgtype.UUID
 	Username string
