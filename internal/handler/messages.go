@@ -9,6 +9,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/chat"
 	"github.com/johndosdos/chatter/internal/database"
 
@@ -16,13 +17,16 @@ import (
 )
 
 // Load recent chat history to current client.
-func ServeMessages(ctx context.Context, db *database.Queries) http.HandlerFunc {
+func ServeMessages(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		if r.Method != http.MethodGet {
 			return
 		}
 
-		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
+		// Parse JWT and get userId.
+		userId := ctx.Value(auth.UserIdKey).(uuid.UUID)
 		since := r.URL.Query().Get("since")
 
 		var dbMessageList []database.ListMessagesRow
@@ -73,7 +77,7 @@ func ServeMessages(ctx context.Context, db *database.Queries) http.HandlerFunc {
 
 			// Render message as sender or receiver.
 			var content templ.Component
-			if message.Userid == userid {
+			if message.Userid == userId {
 				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			} else {
 				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)

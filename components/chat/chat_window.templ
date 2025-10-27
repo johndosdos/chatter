@@ -1,13 +1,15 @@
 package chat
 
-templ ChatWindow(userid string) {
+templ ChatWindow() {
 	<div
 		hx-ext="ws"
-		ws-connect={ "/ws?userid=" + userid }
+		ws-connect="/ws"
+		hx-get="/api/token/refresh"
+		hx-trigger="htmx:wsError"
 		class="w-full h-dvh overscroll-hidden max-w-3xl flex flex-col relative"
 	>
 		<div class="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-zinc-950 to-transparent pointer-events-none"></div>
-		@MessageArea(userid)
+		@MessageArea()
 		<div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none"></div>
 		@ChatInput()
 	</div>

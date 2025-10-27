@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"log"
 	"net/http"
 
@@ -9,12 +8,15 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
 	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
-func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerFunc {
+func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		upgrader := websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		}
@@ -25,9 +27,9 @@ func ServeWs(ctx context.Context, h *ws.Hub, db *database.Queries) http.HandlerF
 			return
 		}
 
-		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
+		userId := ctx.Value(auth.UserIdKey).(uuid.UUID)
 
-		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userid, Valid: true})
+		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userId, Valid: true})
 
 		// We'll register our new client to the central hub.
 		c := ws.NewClient(conn)

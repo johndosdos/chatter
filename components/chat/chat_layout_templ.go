@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/johndosdos/chatter/components"
 
-func ChatLayout(userid string) templ.Component {
+func ChatLayout() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -47,11 +47,11 @@ func ChatLayout(userid string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ChatWindow(userid).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ChatWindow().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n\t\t\t\tlet messageArea = document.getElementById(\"message-area\");\n\n\t\t\t\t// Add auto-scroll mechanism on new messages, with animation.\n\t\t\t\tdocument.body.addEventListener(\"htmx:oobAfterSwap\", () => {\n\t\t\t\t\tmessageArea.scroll({ top: messageArea.scrollHeight, behavior: \"smooth\" })\n\t\t\t\t});\n\n        let initialLoad = false;\n        document.body.addEventListener(\"htmx:wsOpen\", () => {\n          initialLoad = true;\n        });\n\n        let lastMsg = messageArea?.lastElementChild;\n        let since = lastMsg?.dataset.timestamp;\n        document.body.addEventListener(\"htmx:wsConnecting\", () => {\n          if (!initialLoad) {\n            return;\n          }\n\n          lastMsg = messageArea?.lastElementChild;\n          since = lastMsg?.dataset.timestamp;\n          if (!since) {\n            return\n          }\n\n          let url = new URL(\"/messages\", window.location.origin);\n          let params = new URLSearchParams(window.location.search);\n          url.searchParams.set(\"userid\", params.get(\"userid\"));\n          url.searchParams.set(\"since\", since);\n\n          htmx.ajax(\"GET\", url.toString(), { target: \"#message-area\", swap: \"beforeend\" });\n        });\n\t\t\t</script></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<script>\n\t\t\t\tlet messageArea = document.getElementById(\"message-area\");\n\n        document.body.addEventListener(\"htmx:responseError\", (event) => {\n          if (event.detail.xhr.status === 401) {\n            htmx.ajax(\"GET\", \"/api/token/refresh\");\n          }\n        });\n\n\t\t\t\t// Add auto-scroll mechanism on new messages, with animation.\n\t\t\t\tdocument.body.addEventListener(\"htmx:oobAfterSwap\", () => {\n\t\t\t\t\tmessageArea.scroll({ top: messageArea.scrollHeight, behavior: \"smooth\" })\n\t\t\t\t});\n\n        let initialLoad = false;\n        document.body.addEventListener(\"htmx:wsOpen\", () => {\n          initialLoad = true;\n        });\n\n        let lastMsg = messageArea?.lastElementChild;\n        let since = lastMsg?.dataset.timestamp;\n        document.body.addEventListener(\"htmx:wsConnecting\", () => {\n          if (!initialLoad) {\n            return;\n          }\n\n          lastMsg = messageArea?.lastElementChild;\n          since = lastMsg?.dataset.timestamp;\n          if (!since) {\n            return\n          }\n\n          let url = new URL(\"/messages\", window.location.origin);\n          url.searchParams.set(\"since\", since);\n\n          htmx.ajax(\"GET\", url.toString(), { target: \"#message-area\", swap: \"beforeend\" });\n        });\n\t\t\t</script></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,8 +16,10 @@ import (
 	"github.com/johndosdos/chatter/internal/database"
 )
 
-func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
+func ServeLogin(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		if r.Method != http.MethodPost {
 			viewAuth.Login().Render(ctx, w)
 			return
@@ -55,13 +57,64 @@ func ServeLogin(ctx context.Context, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("HX-Redirect", fmt.Sprintf("/chat?userid=%s", user.UserID))
+		jwtString, err := auth.MakeJWT(user.UserID.Bytes, os.Getenv("JWT_SECRET"), 5*time.Minute)
+		if err != nil {
+			log.Printf("[auth] failed to create JWT: %v", err)
+			return
+		}
+
+		r = r.WithContext(context.WithValue(ctx, auth.UserIdKey, uuid.UUID(user.UserID.Bytes)))
+		refreshTok, err := auth.MakeRefreshToken(r.Context(), db)
+		if err != nil {
+			log.Printf("[auth] failed to create refresh token: %v", err)
+			return
+		}
+
+		// Set cookie for access token. Expires in 5 minutes.
+		http.SetCookie(w, &http.Cookie{
+			Name:        "jwt",
+			Value:       jwtString,
+			Quoted:      false,
+			Path:        "/",
+			Domain:      "",
+			Expires:     time.Time{},
+			RawExpires:  "",
+			MaxAge:      5 * 60,
+			Secure:      true,
+			HttpOnly:    true,
+			SameSite:    http.SameSiteLaxMode,
+			Partitioned: false,
+			Raw:         "",
+			Unparsed:    []string{},
+		})
+
+		// Set another cookie for refresh tokens. Expires in 7 days.
+		http.SetCookie(w, &http.Cookie{
+			Name:        "refresh_token",
+			Value:       refreshTok,
+			Quoted:      false,
+			Path:        "/api/token/refresh",
+			Domain:      "",
+			Expires:     time.Time{},
+			RawExpires:  "",
+			MaxAge:      7 * 24 * 60 * 60,
+			Secure:      true,
+			HttpOnly:    true,
+			SameSite:    http.SameSiteStrictMode,
+			Partitioned: false,
+			Raw:         "",
+			Unparsed:    []string{},
+		})
+
+		w.Header().Set("HX-Redirect", "/chat")
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func ServeSignup(ctx context.Context, db *database.Queries) http.HandlerFunc {
+func ServeSignup(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		if r.Method != http.MethodPost {
 			viewAuth.Signup().Render(ctx, w)
 			return
