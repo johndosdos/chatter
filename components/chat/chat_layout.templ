@@ -2,14 +2,20 @@ package chat
 
 import "github.com/johndosdos/chatter/components"
 
-templ ChatLayout(userid string) {
+templ ChatLayout() {
 	@components.Base() {
 		<div class="bg-zinc-950 flex items-center justify-center font-sans">
-			@ChatWindow(userid)
+			@ChatWindow()
 			// Here, we ask clients for their username through the window.prompt() method.
 			// We'll also be using local storage to store their usernames in the browser.
 			<script>
 				let messageArea = document.getElementById("message-area");
+
+        document.body.addEventListener("htmx:responseError", (event) => {
+          if (event.detail.xhr.status === 401) {
+            htmx.ajax("GET", "/api/token/refresh");
+          }
+        });
 
 				// Add auto-scroll mechanism on new messages, with animation.
 				document.body.addEventListener("htmx:oobAfterSwap", () => {
@@ -35,8 +41,6 @@ templ ChatLayout(userid string) {
           }
 
           let url = new URL("/messages", window.location.origin);
-          let params = new URLSearchParams(window.location.search);
-          url.searchParams.set("userid", params.get("userid"));
           url.searchParams.set("since", since);
 
           htmx.ajax("GET", url.toString(), { target: "#message-area", swap: "beforeend" });

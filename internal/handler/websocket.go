@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
 	ws "github.com/johndosdos/chatter/internal/websocket"
 )
@@ -26,9 +27,9 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
+		userId := ctx.Value(auth.UserIdKey).(uuid.UUID)
 
-		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userid, Valid: true})
+		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userId, Valid: true})
 
 		// We'll register our new client to the central hub.
 		c := ws.NewClient(conn)

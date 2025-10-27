@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	viewChat "github.com/johndosdos/chatter/components/chat"
 )
 
@@ -15,8 +14,6 @@ func ServeChat() http.HandlerFunc {
 			return
 		}
 
-		userid, _ := uuid.Parse(r.URL.Query().Get("userid"))
-
-		viewChat.ChatLayout(userid.String()).Render(ctx, w)
+		viewChat.ChatLayout().Render(ctx, w)
 	}
 }
