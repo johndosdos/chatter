@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 )
 
@@ -12,8 +13,13 @@ func ServeRoot() http.HandlerFunc {
 		// If valid, proceed to "/chat" and let them handle the access token.
 
 		jwtCookie, err := r.Cookie("jwt")
-		if errors.Is(err, http.ErrNoCookie) || jwtCookie.MaxAge < 0 {
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
 			http.Redirect(w, r, "/account/login", http.StatusSeeOther)
+			return
+		case jwtCookie.MaxAge < 0:
+			log.Printf("[auth] expired JWT: %v", jwtCookie.MaxAge)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 

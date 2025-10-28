@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -36,12 +34,8 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		password := r.PostFormValue("password")
 
 		user, err := db.GetUserWithPasswordByEmail(ctx, email)
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
+		if err != nil {
 			viewAuth.Error("Invalid email or password.").Render(ctx, w)
-			return
-		case err != nil:
-			http.Error(w, "Server error.", http.StatusInternalServerError)
 			log.Printf("[error] failed to retrieve user: %v", err)
 			return
 		}

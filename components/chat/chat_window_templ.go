@@ -29,7 +29,7 @@ func ChatWindow() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-ext=\"ws\" ws-connect=\"/ws\" hx-get=\"/api/token/refresh\" hx-trigger=\"htmx:wsError\" class=\"w-full h-dvh overscroll-hidden max-w-3xl flex flex-col relative\"><div class=\"absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-zinc-950 to-transparent pointer-events-none\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-ext=\"ws\" ws-connect=\"/ws\" hx-get=\"/api/token/refresh\" hx-trigger=\"htmx:wsError\" hx-swap=\"none\" class=\"w-full h-dvh overscroll-hidden max-w-3xl flex flex-col relative\"><div class=\"absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-zinc-950 to-transparent pointer-events-none\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

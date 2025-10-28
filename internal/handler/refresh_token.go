@@ -15,6 +15,7 @@ func RefreshToken(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		refreshTokCookie, err := r.Cookie("refresh_token")
 		if errors.Is(err, http.ErrNoCookie) {
+			w.Header().Set("HX-Redirect", "/account/login")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -49,7 +50,6 @@ func RefreshToken(db *database.Queries) http.HandlerFunc {
 			Unparsed:    []string{},
 		})
 
-		w.Header().Set("HX-Redirect", "/account/login")
 		w.WriteHeader(http.StatusOK)
 	}
 }
