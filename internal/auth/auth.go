@@ -22,7 +22,7 @@ const UserIdKey ContextKey = "userId"
 func HashPassword(password string) (string, error) {
 	hashed_pw, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {
-		return "", fmt.Errorf("[error] failed to hash password: %v", err)
+		return "", fmt.Errorf("[argon2id] pw hash failed: %w", err)
 	}
 
 	return hashed_pw, nil
@@ -31,7 +31,10 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) (bool, error) {
 	isMatch, err := argon2id.ComparePasswordAndHash(password, hash)
 	if err != nil {
-		return false, fmt.Errorf("[error] original and hashed password don't match: %v", err)
+		return false, fmt.Errorf("[argon2id] pw and hash comparison failed: %w", err)
+	}
+	if !isMatch {
+		return false, fmt.Errorf("[error] pw and hash do not match")
 	}
 
 	return isMatch, nil
