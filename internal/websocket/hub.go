@@ -45,7 +45,7 @@ func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 				client.Recv <- message
 			}
 		case <-ctx.Done():
-			log.Printf("[error] context cancelled: %v", ctx.Err().Error())
+			log.Printf("websocket/hub/run: context cancelled: %v", ctx.Err().Error())
 			return
 		}
 	}
@@ -62,7 +62,7 @@ func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message 
 		},
 	})
 	if err != nil {
-		log.Printf("[DB error] failed to store message to database: %v", err)
+		log.Printf("websocket/hub/db: failed to store message to database: %v", err)
 		return
 	}
 }

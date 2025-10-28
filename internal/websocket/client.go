@@ -50,8 +50,8 @@ func (c *Client) WriteMessage() {
 			// Invoke a new writer from the current connection.
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log.Printf("[write error] %v", err)
-				break
+				log.Printf("websocket/client/write: %v", err)
+				return
 			}
 
 			// Check if current and previous messages have the same userid.
@@ -76,7 +76,7 @@ func (c *Client) WriteMessage() {
 		case <-t.C:
 			err := c.conn.WriteMessage(websocket.PingMessage, nil)
 			if err != nil {
-				log.Printf("[write error] failed to send ping signal: %v", err)
+				log.Printf("websocket/client/write: failed to send ping signal: %v", err)
 				return
 			}
 		}
@@ -96,7 +96,7 @@ func (c *Client) ReadMessage() {
 	// within a set deadline.
 	err := c.conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
 	if err != nil {
-		log.Printf("[conn error] failed to set read deadline: %v", err)
+		log.Printf("websocket/client/read: failed to set read deadline: %v", err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (c *Client) ReadMessage() {
 		_, p, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("[conn error] %v", err)
+				log.Printf("websocket/client/read: %v", err)
 			}
 			break
 		}
@@ -124,7 +124,7 @@ func (c *Client) ReadMessage() {
 		}
 		err = json.Unmarshal(p, &message)
 		if err != nil {
-			log.Printf("[server error] failed to process payload from client: %v", err)
+			log.Printf("websocket/client/read: failed to process payload from client: %v", err)
 			break
 		}
 

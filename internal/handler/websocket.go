@@ -23,7 +23,7 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Printf("[error] failed to upgrade connection to WebSocket: %v", err)
+			log.Printf("handler/websocket: failed to upgrade connection to WebSocket: %v", err)
 			return
 		}
 

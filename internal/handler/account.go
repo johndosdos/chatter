@@ -26,7 +26,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Invalid form data.", http.StatusBadRequest)
-			log.Printf("[error] failed to parse form values: %v", err)
+			log.Printf("handler/account/login: failed to parse form values: %v", err)
 			return
 		}
 
@@ -36,14 +36,14 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		user, err := db.GetUserWithPasswordByEmail(ctx, email)
 		if err != nil {
 			viewAuth.Error("Invalid email or password.").Render(ctx, w)
-			log.Printf("[error] failed to retrieve user: %v", err)
+			log.Printf("handler/account/login: failed to retrieve user: %v", err)
 			return
 		}
 
 		ok, err := auth.CheckPasswordHash(password, user.HashedPassword)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
-			log.Printf("[error] cannot verify password — hash may be corrupted: %v", err)
+			log.Printf("handler/account/login: cannot verify password — hash may be corrupted: %v", err)
 			return
 		}
 		if !ok {
@@ -53,14 +53,14 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 
 		jwtString, err := auth.MakeJWT(user.UserID.Bytes, os.Getenv("JWT_SECRET"), 5*time.Minute)
 		if err != nil {
-			log.Printf("[auth] failed to create JWT: %v", err)
+			log.Printf("handler/account/login: failed to create JWT: %v", err)
 			return
 		}
 
 		r = r.WithContext(context.WithValue(ctx, auth.UserIdKey, uuid.UUID(user.UserID.Bytes)))
 		refreshTok, err := auth.MakeRefreshToken(r.Context(), db)
 		if err != nil {
-			log.Printf("[auth] failed to create refresh token: %v", err)
+			log.Printf("handler/account/login: failed to create refresh token: %v", err)
 			return
 		}
 
@@ -117,7 +117,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Invalid form data.", http.StatusBadRequest)
-			log.Printf("[error] failed to parse form values: %v", err)
+			log.Printf("handler/account/signup: failed to parse form values: %v", err)
 			return
 		}
 
@@ -139,7 +139,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		})
 		if err != nil {
 			http.Error(w, "Database error.", http.StatusInternalServerError)
-			log.Printf("[error] failed to create user entry in database: %v", err)
+			log.Printf("handler/account/signup: failed to create user entry in database: %v", err)
 			return
 		}
 
@@ -147,14 +147,14 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		hashed_pw, err := auth.HashPassword(password)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
-			log.Printf("[error] argon2id hash creation failed: %v", err)
+			log.Printf("handler/account/signup: argon2id hash creation failed: %v", err)
 			return
 		}
 
 		ok, err := auth.CheckPasswordHash(password, hashed_pw)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
-			log.Printf("[error] cannot verify password — hash may be corrupted: %v", err)
+			log.Printf("handler/account/signup: cannot verify password — hash may be corrupted: %v", err)
 			return
 		}
 
@@ -166,7 +166,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 			})
 			if err != nil {
 				http.Error(w, "Database error.", http.StatusInternalServerError)
-				log.Printf("[error] failed to create password entry in database: %v", err)
+				log.Printf("handler/account/signup: failed to create password entry in database: %v", err)
 				return
 			}
 		}

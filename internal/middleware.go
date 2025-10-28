@@ -20,7 +20,7 @@ func Middleware(next http.Handler) http.HandlerFunc {
 
 		uuid, err := auth.ValidateJWT(jwtCookie.Value, os.Getenv("JWT_SECRET"))
 		if err != nil {
-			log.Printf("[auth error] invalid access token: %v", err)
+			log.Printf("middleware: invalid access token: %v", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

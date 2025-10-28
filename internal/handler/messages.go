@@ -38,7 +38,7 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 				if ctx.Err() != nil {
 					return
 				}
-				log.Printf("[error] failed to load messages from database: %v", err)
+				log.Printf("handler/messages: failed to load messages from database: %v", err)
 				return
 			}
 		} else {
@@ -53,7 +53,7 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 				if ctx.Err() != nil {
 					return
 				}
-				log.Printf("[error] failed to load messages from database: %v", err)
+				log.Printf("handler/messages: failed to load messages from database: %v", err)
 				return
 			}
 		}

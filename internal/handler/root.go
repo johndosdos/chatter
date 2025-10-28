@@ -18,7 +18,7 @@ func ServeRoot() http.HandlerFunc {
 			http.Redirect(w, r, "/account/login", http.StatusSeeOther)
 			return
 		case jwtCookie.MaxAge < 0:
-			log.Printf("[auth] expired JWT: %v", jwtCookie.MaxAge)
+			log.Printf("handler/root: expired JWT: %v", jwtCookie.MaxAge)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

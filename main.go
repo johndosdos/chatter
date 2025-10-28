@@ -22,6 +22,8 @@ var (
 )
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	port := ":8080"
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -31,7 +33,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	dbConn, err = pgxpool.New(ctx, dbURL)
 	if err != nil {
-		log.Printf("[Error] cannot connect to postgresql database: %v", err)
+		log.Printf("main: cannot connect to postgresql database: %v", err)
 		return
 	}
 

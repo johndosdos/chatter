@@ -22,13 +22,13 @@ func RefreshToken(db *database.Queries) http.HandlerFunc {
 
 		refreshTok, err := db.GetUserFromRefreshTok(r.Context(), refreshTokCookie.Value)
 		if err != nil {
-			log.Printf("[db] failed to retrieve user: %v", err)
+			log.Printf("handler/refresh token: failed to retrieve user: %v", err)
 			return
 		}
 
 		jwtString, err := auth.MakeJWT(refreshTok.UserID.Bytes, os.Getenv("JWT_SECRET"), 5*time.Minute)
 		if err != nil {
-			log.Printf("[auth] failed to create JWT: %v", err)
+			log.Printf("handler/refresh token: failed to create JWT: %v", err)
 			return
 		}
 
