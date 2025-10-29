@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -29,33 +30,9 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 		userId := ctx.Value(auth.UserIdKey).(uuid.UUID)
 		since := r.URL.Query().Get("since")
 
-		var dbMessageList []database.ListMessagesRow
-		var err error
-
-		if since == "" {
-			dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Valid: false})
-			if err != nil {
-				if ctx.Err() != nil {
-					return
-				}
-				log.Printf("handler/messages: failed to load messages from database: %v", err)
-				return
-			}
-		} else {
-			t, err := time.Parse(time.RFC3339Nano, since)
-			if err != nil {
-				log.Println(err.Error())
-				return
-			}
-
-			dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: t, Valid: true})
-			if err != nil {
-				if ctx.Err() != nil {
-					return
-				}
-				log.Printf("handler/messages: failed to load messages from database: %v", err)
-				return
-			}
+		dbMessageList, err := filterMessages(ctx, since, db)
+		if err != nil {
+			log.Printf("handler/messages: %v", err)
 		}
 
 		var prevMsg chat.Message
@@ -87,4 +64,28 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			prevMsg = message
 		}
 	}
+}
+
+func filterMessages(ctx context.Context, since string, db *database.Queries) ([]database.ListMessagesRow, error) {
+	var dbMessageList []database.ListMessagesRow
+	var err error
+
+	if since != "" {
+		t, err := time.Parse(time.RFC3339Nano, since)
+		if err != nil {
+			return nil, fmt.Errorf("handler/messages: failed to parse time in specified format: %w", err)
+		}
+
+		dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: t, Valid: true})
+		if err != nil {
+			return nil, fmt.Errorf("handler/messages: failed to load messages from database: %w", err)
+		}
+	} else {
+		dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: time.Time{}, Valid: false})
+		if err != nil {
+			return nil, fmt.Errorf("handler/messages: failed to load messages from database: %w", err)
+		}
+	}
+
+	return dbMessageList, nil
 }
