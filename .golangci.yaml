@@ -1,0 +1,22 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    # Core Bug Finders
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    - bodyclose
+    
+    # Style & Formatting
+    - revive
+    
+    # Security & Readability
+    - gosec
+    - goconst
