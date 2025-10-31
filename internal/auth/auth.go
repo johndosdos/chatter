@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -34,7 +35,7 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 		return false, fmt.Errorf("internal/auth: pw and hash comparison failed: %w", err)
 	}
 	if !isMatch {
-		return false, fmt.Errorf("internal/auth: pw and hash do not match")
+		return false, errors.New("internal/auth: pw and hash do not match")
 	}
 
 	return isMatch, nil
@@ -66,11 +67,11 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	}
 
 	if !token.Valid {
-		return uuid.UUID{}, fmt.Errorf("internal/auth: token is invalid")
+		return uuid.UUID{}, errors.New("internal/auth: token is invalid")
 	}
 
 	if claims.Subject == "" {
-		return uuid.UUID{}, fmt.Errorf("subject claim is missing")
+		return uuid.UUID{}, errors.New("subject claim is missing")
 	}
 
 	userid, _ := token.Claims.GetSubject()
@@ -79,7 +80,9 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 
 func MakeRefreshToken(ctx context.Context, db *database.Queries) (string, error) {
 	rnd := make([]byte, 32)
-	rand.Read(rnd)
+
+	// rand.Read() never returns an error.
+	_, _ = rand.Read(rnd)
 	rndStr := hex.EncodeToString(rnd)
 
 	userId := ctx.Value(UserIdKey).(uuid.UUID)

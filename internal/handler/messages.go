@@ -59,7 +59,10 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			} else {
 				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			}
-			content.Render(context.Background(), w)
+			if err := content.Render(context.Background(), w); err != nil {
+				log.Printf("handler/messages: failed to render component: %v", err)
+				return
+			}
 
 			prevMsg = message
 		}

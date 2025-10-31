@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 
 	viewChat "github.com/johndosdos/chatter/components/chat"
@@ -14,6 +15,9 @@ func ServeChat() http.HandlerFunc {
 			return
 		}
 
-		viewChat.ChatLayout().Render(ctx, w)
+		if err := viewChat.ChatLayout().Render(ctx, w); err != nil {
+			log.Printf("handler/chat: failed to close connection: %v", err)
+			return
+		}
 	}
 }

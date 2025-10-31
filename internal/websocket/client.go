@@ -67,9 +67,17 @@ func (c *Client) WriteMessage() {
 			} else {
 				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			}
-			content.Render(context.Background(), w)
+			if err := content.Render(context.Background(), w); err != nil {
+				log.Printf("websocket/client/write: failed to render component: %v", err)
+				return
+			}
 
-			w.Close()
+			defer func() {
+				if err := w.Close(); err != nil {
+					log.Printf("websocket/client/write: failed to close connection: %v", err)
+					return
+				}
+			}()
 
 			prevMsg = message
 

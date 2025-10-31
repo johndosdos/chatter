@@ -19,7 +19,9 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		ctx := r.Context()
 
 		if r.Method != http.MethodPost {
-			viewAuth.Login().Render(ctx, w)
+			if err := viewAuth.Login().Render(ctx, w); err != nil {
+				log.Printf("handler/account/login: failed to render component: %v", err)
+			}
 			return
 		}
 
@@ -35,8 +37,11 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 
 		user, err := db.GetUserWithPasswordByEmail(ctx, email)
 		if err != nil {
-			viewAuth.Error("Invalid email or password.").Render(ctx, w)
-			log.Printf("handler/account/login: failed to retrieve user: %v", err)
+			if err := viewAuth.Error("Invalid email or password.").Render(ctx, w); err != nil {
+				log.Printf("handler/account/login: failed to render component: %v", err)
+				return
+			}
+			log.Printf("handler/account/login: failed to retrieve user from db: %v", err)
 			return
 		}
 
@@ -47,7 +52,9 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 			return
 		}
 		if !ok {
-			viewAuth.Error("Invalid email or password.").Render(ctx, w)
+			if err := viewAuth.Error("Invalid email or password.").Render(ctx, w); err != nil {
+				log.Printf("handler/account/login: failed to render component: %v", err)
+			}
 			return
 		}
 
@@ -110,7 +117,10 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		ctx := r.Context()
 
 		if r.Method != http.MethodPost {
-			viewAuth.Signup().Render(ctx, w)
+			if err := viewAuth.Signup().Render(ctx, w); err != nil {
+				log.Printf("handler/account/signup: failed to close connection: %v", err)
+				return
+			}
 			return
 		}
 
@@ -126,7 +136,10 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 
 		// Validate password by comparing main and confirm.
 		if password != confirm_pw {
-			viewAuth.Error("Passwords do not match!").Render(ctx, w)
+			if err := viewAuth.Error("Passwords do not match!").Render(ctx, w); err != nil {
+				log.Printf("handler/account/signup: failed to close connection: %v", err)
+				return
+			}
 			return
 		}
 
