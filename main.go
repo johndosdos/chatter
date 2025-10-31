@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -24,7 +25,6 @@ var (
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	port := ":8080"
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
@@ -47,6 +47,14 @@ func main() {
 	go hub.Run(ctx, dbQueries)
 	// client hub init end
 
+	server := &http.Server{
+		Addr:              ":8080",
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       30 * time.Second,
+	}
+
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.Handle("/account/login", handler.ServeLogin(dbQueries))
@@ -64,6 +72,6 @@ func main() {
 
 	defer dbConn.Close()
 
-	log.Println("Server starting at port", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	log.Println("Server starting at port", server.Addr)
+	log.Fatal(server.ListenAndServe())
 }
