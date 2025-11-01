@@ -14,7 +14,7 @@ import (
 )
 
 type Client struct {
-	Userid   uuid.UUID
+	UserID   uuid.UUID
 	Username string
 	conn     *websocket.Conn
 	Hub      *Hub
@@ -56,13 +56,13 @@ func (c *Client) WriteMessage() {
 
 			// Check if current and previous messages have the same userid.
 			sameUser := false
-			if message.Userid == prevMsg.Userid {
+			if message.UserID == prevMsg.UserID {
 				sameUser = true
 			}
 
 			// Render message as sender or receiver.
 			var content templ.Component
-			if message.Userid == c.Userid {
+			if message.UserID == c.UserID {
 				content = components.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			} else {
 				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
@@ -126,7 +126,7 @@ func (c *Client) ReadMessage() {
 		// attribute will also send a HEADERS field along with the client message.
 		// Also, set CreatedAt to the current time.
 		message := chat.Message{
-			Userid:    c.Userid,
+			UserID:    c.UserID,
 			Username:  c.Username,
 			CreatedAt: time.Now().UTC(),
 		}

@@ -25,7 +25,7 @@ func Middleware(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), auth.UserIdKey, uuid))
+		r = r.WithContext(context.WithValue(r.Context(), auth.UserIDKey, uuid))
 		next.ServeHTTP(w, r)
 	}
 }

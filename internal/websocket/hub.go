@@ -30,11 +30,11 @@ func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 	for {
 		select {
 		case client := <-h.Register:
-			h.clients[client.Userid] = client
+			h.clients[client.UserID] = client
 			client.Hub = h
 			h.Ok <- true
 		case client := <-h.Unregister:
-			delete(h.clients, client.Userid)
+			delete(h.clients, client.UserID)
 			close(client.Recv)
 		case message := <-h.accept:
 			// We need to sanitize incoming messages to prevent XSS.
@@ -53,7 +53,7 @@ func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 
 func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message chat.Message) {
 	_, err := db.CreateMessage(ctx, database.CreateMessageParams{
-		UserID:  pgtype.UUID{Bytes: [16]byte(message.Userid), Valid: true},
+		UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
 		Content: string(message.Content),
 		CreatedAt: pgtype.Timestamptz{
 			Time:             message.CreatedAt,

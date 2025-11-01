@@ -64,7 +64,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		r = r.WithContext(context.WithValue(ctx, auth.UserIdKey, uuid.UUID(user.UserID.Bytes)))
+		r = r.WithContext(context.WithValue(ctx, auth.UserIDKey, uuid.UUID(user.UserID.Bytes)))
 		refreshTok, err := auth.MakeRefreshToken(r.Context(), db)
 		if err != nil {
 			log.Printf("handler/account/login: failed to create refresh token: %v", err)
@@ -132,10 +132,10 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		}
 
 		password := r.PostFormValue("password")
-		confirm_pw := r.PostFormValue("confirm_password")
+		confirmPw := r.PostFormValue("confirm_password")
 
 		// Validate password by comparing main and confirm.
-		if password != confirm_pw {
+		if password != confirmPw {
 			if err := viewAuth.Error("Passwords do not match!").Render(ctx, w); err != nil {
 				log.Printf("handler/account/signup: failed to close connection: %v", err)
 				return
@@ -157,14 +157,14 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		}
 
 		// Hash and compare password before storing to database.
-		hashed_pw, err := auth.HashPassword(password)
+		hashedPw, err := auth.HashPassword(password)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
 			log.Printf("handler/account/signup: argon2id hash creation failed: %v", err)
 			return
 		}
 
-		ok, err := auth.CheckPasswordHash(password, hashed_pw)
+		ok, err := auth.CheckPasswordHash(password, hashedPw)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
 			log.Printf("handler/account/signup: cannot verify password — hash may be corrupted: %v", err)
@@ -174,7 +174,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		if ok {
 			_, err := db.CreatePassword(ctx, database.CreatePasswordParams{
 				UserID:         user.UserID,
-				HashedPassword: hashed_pw,
+				HashedPassword: hashedPw,
 				CreatedAt:      pgtype.Timestamptz{Time: time.Now().UTC(), Valid: true},
 			})
 			if err != nil {

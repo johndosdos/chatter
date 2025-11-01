@@ -27,13 +27,13 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		userId := ctx.Value(auth.UserIdKey).(uuid.UUID)
+		userID := ctx.Value(auth.UserIDKey).(uuid.UUID)
 
-		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userId, Valid: true})
+		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
 
 		// We'll register our new client to the central hub.
 		c := ws.NewClient(conn)
-		c.Userid = user.UserID.Bytes
+		c.UserID = user.UserID.Bytes
 		c.Username = user.Username
 
 		h.Register <- c

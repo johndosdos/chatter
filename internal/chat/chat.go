@@ -11,6 +11,6 @@ import (
 type Message struct {
 	Content   string `json:"content"`
 	Username  string
-	Userid    uuid.UUID
+	UserID    uuid.UUID
 	CreatedAt time.Time
 }

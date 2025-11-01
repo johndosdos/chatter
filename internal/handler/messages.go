@@ -26,8 +26,8 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		// Parse JWT and get userId.
-		userId := ctx.Value(auth.UserIdKey).(uuid.UUID)
+		// Parse JWT and get UserID.
+		userID := ctx.Value(auth.UserIDKey).(uuid.UUID)
 		since := r.URL.Query().Get("since")
 
 		dbMessageList, err := filterMessages(ctx, since, db)
@@ -38,15 +38,15 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 		var prevMsg chat.Message
 		for _, msg := range dbMessageList {
 			message := chat.Message{
-				Userid:    msg.UserID.Bytes,
+				UserID:    msg.UserID.Bytes,
 				Username:  msg.Username,
 				Content:   msg.Content,
 				CreatedAt: msg.CreatedAt.Time,
 			}
 
-			// Check if current and previous messages have the same userid.
+			// Check if current and previous messages have the same UserID.
 			sameUser := false
-			if message.Userid == prevMsg.Userid {
+			if message.UserID == prevMsg.UserID {
 				sameUser = true
 			}
 
@@ -54,7 +54,7 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 
 			// Render message as sender or receiver.
 			var content templ.Component
-			if message.Userid == userId {
+			if message.UserID == userID {
 				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			} else {
 				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
