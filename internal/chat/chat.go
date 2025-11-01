@@ -1,3 +1,4 @@
+// Package chat provides functions related to chat messages.
 package chat
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// Message holds information about a single message.
 type Message struct {
 	Content   string `json:"content"`
 	Username  string
