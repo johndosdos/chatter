@@ -20,3 +20,9 @@ linters:
     # Security & Readability
     - gosec
     - goconst
+
+output:
+  sort-order:
+    - file
+    - linter
+    - severity
