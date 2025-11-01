@@ -13,6 +13,7 @@ import (
 	"github.com/johndosdos/chatter/internal/chat"
 )
 
+// Client contains client connection information.
 type Client struct {
 	UserID   uuid.UUID
 	Username string
@@ -23,6 +24,7 @@ type Client struct {
 
 const pongWait = 60 * time.Second
 
+// NewClient returns a new instance of Client.
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn: conn,
@@ -30,6 +32,7 @@ func NewClient(conn *websocket.Conn) *Client {
 	}
 }
 
+// WriteMessage writes and renders to the outgoing websocket stream.
 func (c *Client) WriteMessage() {
 	t := time.NewTicker((pongWait * 9) / 10)
 	defer t.Stop()
@@ -91,6 +94,7 @@ func (c *Client) WriteMessage() {
 	}
 }
 
+// ReadMessage reads the incoming data from the websocket stream.
 func (c *Client) ReadMessage() {
 	defer func() {
 		c.Hub.Unregister <- c
@@ -109,7 +113,7 @@ func (c *Client) ReadMessage() {
 	}
 
 	// Reset deadline after receiving pong signal.
-	c.conn.SetPongHandler(func(appData string) error {
+	c.conn.SetPongHandler(func(_ string) error {
 		return c.conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
 	})
 

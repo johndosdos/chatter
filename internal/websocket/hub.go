@@ -11,6 +11,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
+// Hub contains functions needed for thee app state management.
 type Hub struct {
 	clients    map[uuid.UUID]*Client
 	Register   chan *Client
@@ -26,6 +27,7 @@ type sanitizer interface {
 	SanitizeBytes(p []byte) []byte
 }
 
+// Run manages incoming and outgoing hub traffic.
 func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 	for {
 		select {
@@ -51,6 +53,7 @@ func (h *Hub) Run(ctx context.Context, db *database.Queries) {
 	}
 }
 
+// DbStoreMessage creates a new message entry to the database.
 func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message chat.Message) {
 	_, err := db.CreateMessage(ctx, database.CreateMessageParams{
 		UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
@@ -67,6 +70,7 @@ func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message 
 	}
 }
 
+// NewHub returns a new instance of Hub.
 func NewHub() *Hub {
 	return &Hub{
 		clients:    make(map[uuid.UUID]*Client),

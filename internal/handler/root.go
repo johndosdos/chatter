@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+// ServeRoot routes connections to the appropriate endpoint, based on the
+// validity of the JWT.
 func ServeRoot() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get refresh token and check if valid.

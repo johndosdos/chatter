@@ -1,3 +1,4 @@
+// Package main our entry point.
 package main
 
 import (
@@ -28,7 +29,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	// database init start
 	var err error
 	dbURL := os.Getenv("DB_URL")
 	dbConn, err = pgxpool.New(ctx, dbURL)
@@ -36,16 +36,12 @@ func main() {
 		log.Printf("main: cannot connect to postgresql database: %v", err)
 		return
 	}
-
 	dbQueries = database.New(dbConn)
-	// database init end
 
-	// client hub init start
 	// hub.Run is our central hub that is always listening for client related
 	// events.
 	hub := ws.NewHub()
 	go hub.Run(ctx, dbQueries)
-	// client hub init end
 
 	server := &http.Server{
 		Addr:              ":8080",

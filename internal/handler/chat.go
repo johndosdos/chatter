@@ -7,6 +7,7 @@ import (
 	viewChat "github.com/johndosdos/chatter/components/chat"
 )
 
+// ServeChat handles the chat interface.
 func ServeChat() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

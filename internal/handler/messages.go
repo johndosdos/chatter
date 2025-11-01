@@ -17,7 +17,8 @@ import (
 	viewChat "github.com/johndosdos/chatter/components/chat"
 )
 
-// Load recent chat history to current client.
+// ServeMessages handles client message rendering. It will load recent
+// chat history to current client.
 func ServeMessages(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

@@ -10,6 +10,7 @@ import (
 	"github.com/johndosdos/chatter/internal/auth"
 )
 
+// Middleware validates the client's JWT.
 func Middleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jwtCookie, err := r.Cookie("jwt")

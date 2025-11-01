@@ -13,12 +13,13 @@ import (
 	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
+// ServeWs handles the client's websocket connection upgrade.
 func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		upgrader := websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool { return true },
+			CheckOrigin: func(_ *http.Request) bool { return true },
 		}
 
 		conn, err := upgrader.Upgrade(w, r, nil)

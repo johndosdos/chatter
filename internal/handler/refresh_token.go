@@ -11,6 +11,7 @@ import (
 	"github.com/johndosdos/chatter/internal/database"
 )
 
+// RefreshToken handles issuance of JWT and refresh token.
 func RefreshToken(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		refreshTokCookie, err := r.Cookie("refresh_token")

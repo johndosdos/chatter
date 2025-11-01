@@ -14,6 +14,7 @@ import (
 	"github.com/johndosdos/chatter/internal/database"
 )
 
+// ServeLogin handles user login.
 func ServeLogin(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -112,6 +113,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 	}
 }
 
+// ServeSignup handles user account creation.
 func ServeSignup(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
