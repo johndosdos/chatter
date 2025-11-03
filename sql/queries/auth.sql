@@ -11,3 +11,7 @@ RETURNING *;
 -- name: GetUserFromRefreshTok :one
 SELECT * FROM refresh_tokens
 WHERE token = $1;
+
+-- name: DeleteRefreshToken :one
+SELECT * FROM refresh_tokens
+WHERE token = $1;

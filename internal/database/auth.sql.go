@@ -33,7 +33,7 @@ func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) 
 const createRefreshToken = `-- name: CreateRefreshToken :one
 INSERT INTO refresh_tokens (token, created_at, user_id, expires_at)
 VALUES ($1, $2, $3, $4)
-RETURNING token, created_at, updated_at, user_id, expires_at, revoked_at
+RETURNING token, created_at, updated_at, user_id, expires_at
 `
 
 type CreateRefreshTokenParams struct {
@@ -57,13 +57,30 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 		&i.UpdatedAt,
 		&i.UserID,
 		&i.ExpiresAt,
-		&i.RevokedAt,
+	)
+	return i, err
+}
+
+const deleteRefreshToken = `-- name: DeleteRefreshToken :one
+SELECT token, created_at, updated_at, user_id, expires_at FROM refresh_tokens
+WHERE token = $1
+`
+
+func (q *Queries) DeleteRefreshToken(ctx context.Context, token string) (RefreshToken, error) {
+	row := q.db.QueryRow(ctx, deleteRefreshToken, token)
+	var i RefreshToken
+	err := row.Scan(
+		&i.Token,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
 
 const getUserFromRefreshTok = `-- name: GetUserFromRefreshTok :one
-SELECT token, created_at, updated_at, user_id, expires_at, revoked_at FROM refresh_tokens
+SELECT token, created_at, updated_at, user_id, expires_at FROM refresh_tokens
 WHERE token = $1
 `
 
@@ -76,7 +93,6 @@ func (q *Queries) GetUserFromRefreshTok(ctx context.Context, token string) (Refr
 		&i.UpdatedAt,
 		&i.UserID,
 		&i.ExpiresAt,
-		&i.RevokedAt,
 	)
 	return i, err
 }

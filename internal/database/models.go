@@ -26,7 +26,6 @@ type RefreshToken struct {
 	UpdatedAt pgtype.Timestamptz
 	UserID    pgtype.UUID
 	ExpiresAt pgtype.Timestamptz
-	RevokedAt pgtype.Timestamptz
 }
 
 type User struct {
