@@ -100,7 +100,11 @@ func MakeRefreshToken(ctx context.Context, db *database.Queries) (string, error)
 	_, _ = rand.Read(rnd)
 	rndStr := hex.EncodeToString(rnd)
 
-	userID := ctx.Value(UserIDKey).(uuid.UUID)
+	userID, err := GetUserFromContext(ctx)
+	if err != nil {
+		return "", fmt.Errorf("internal/auth: %w", err)
+	}
+
 	refreshTokenExp := time.Now().UTC().AddDate(0, 0, 7)
 	refreshToken, err := db.CreateRefreshToken(ctx, database.CreateRefreshTokenParams{
 		Token:     rndStr,
@@ -113,4 +117,15 @@ func MakeRefreshToken(ctx context.Context, db *database.Queries) (string, error)
 	}
 
 	return refreshToken.Token, nil
+}
+
+// GetUserFromContext validates r.Context.Value if it exists and returns
+// the user's uuid, otherwise it returns an error.
+func GetUserFromContext(ctx context.Context) (uuid.UUID, error) {
+	userID, ok := ctx.Value(UserIDKey).(uuid.UUID)
+	if !ok {
+		return uuid.UUID{}, errors.New("failed to assert UserIDKey to UUID")
+	}
+
+	return userID, nil
 }

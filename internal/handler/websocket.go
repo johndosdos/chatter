@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -28,7 +27,11 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		userID := ctx.Value(auth.UserIDKey).(uuid.UUID)
+		userID, err := auth.GetUserFromContext(ctx)
+		if err != nil {
+			log.Printf("handler/websocket: %v", err)
+			return
+		}
 
 		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
 

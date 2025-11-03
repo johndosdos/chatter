@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/chat"
@@ -28,12 +27,18 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 		}
 
 		// Parse JWT and get UserID.
-		userID := ctx.Value(auth.UserIDKey).(uuid.UUID)
+		userID, err := auth.GetUserFromContext(ctx)
+		if err != nil {
+			log.Printf("handler/messages: %v", err)
+			return
+		}
+
 		since := r.URL.Query().Get("since")
 
 		dbMessageList, err := filterMessages(ctx, since, db)
 		if err != nil {
 			log.Printf("handler/messages: %v", err)
+			return
 		}
 
 		var prevMsg chat.Message
