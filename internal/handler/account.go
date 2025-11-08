@@ -190,3 +190,33 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// ServeLogout deletes the user's assigned refresh token, and redirects
+// the user to the login page.
+func ServeLogout(db *database.Queries) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		if r.Method != http.MethodPost {
+			if err := viewAuth.Login().Render(ctx, w); err != nil {
+				log.Printf("handler/account/logout: failed to render component: %v", err)
+			}
+			return
+		}
+
+		refreshTok, err := r.Cookie("refresh_token")
+		if err == nil {
+			err = db.DeleteRefreshToken(ctx, refreshTok.Value)
+			if err != nil {
+				log.Printf("handler/account/logout: failed to process token deletion: %v", err)
+				return
+			}
+
+			refreshTok.MaxAge = -1
+			http.SetCookie(w, refreshTok)
+			w.Header().Set("HX-Redirect", "/account/login")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
+}

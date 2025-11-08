@@ -55,6 +55,7 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.Handle("/account/login", handler.ServeLogin(dbQueries))
 	http.Handle("/account/signup", handler.ServeSignup(dbQueries))
+	http.Handle("/account/logout", handler.ServeLogout(dbQueries))
 
 	// Load chat history on HTTP GET on initial connection before starting websockets.
 	// This is to prevent issues regarding resending chat history on websocket reconnection.
