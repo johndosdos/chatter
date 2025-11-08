@@ -75,12 +75,10 @@ func (c *Client) WriteMessage() {
 				return
 			}
 
-			defer func() {
-				if err := w.Close(); err != nil {
-					log.Printf("websocket/client/write: failed to close connection: %v", err)
-					return
-				}
-			}()
+			if err := w.Close(); err != nil {
+				log.Printf("websocket/client/write: failed to close connection: %v", err)
+				return
+			}
 
 			prevMsg = message
 
