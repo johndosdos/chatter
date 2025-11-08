@@ -95,7 +95,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 			Name:        "refresh_token",
 			Value:       refreshTok,
 			Quoted:      false,
-			Path:        "/api/token/refresh",
+			Path:        "/",
 			Domain:      "",
 			Expires:     time.Time{},
 			RawExpires:  "",

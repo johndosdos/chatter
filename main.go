@@ -58,11 +58,9 @@ func main() {
 
 	// Load chat history on HTTP GET on initial connection before starting websockets.
 	// This is to prevent issues regarding resending chat history on websocket reconnection.
-	http.Handle("/messages", internal.Middleware(handler.ServeMessages(dbQueries)))
-	http.Handle("/ws", internal.Middleware(handler.ServeWs(hub, dbQueries)))
-	http.Handle("/chat", internal.Middleware(handler.ServeChat()))
-
-	http.Handle("/api/token/refresh", handler.RefreshToken(dbQueries))
+	http.Handle("/messages", internal.Middleware(handler.ServeMessages(dbQueries), dbQueries))
+	http.Handle("/ws", internal.Middleware(handler.ServeWs(hub, dbQueries), dbQueries))
+	http.Handle("/chat", internal.Middleware(handler.ServeChat(), dbQueries))
 
 	http.Handle("/", handler.ServeRoot())
 

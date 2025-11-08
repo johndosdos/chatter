@@ -9,9 +9,13 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetUserFromRefreshTok :one
-SELECT * FROM refresh_tokens
+SELECT user_id FROM refresh_tokens
 WHERE token = $1;
 
--- name: DeleteRefreshToken :one
-SELECT * FROM refresh_tokens
+-- name: DeleteRefreshToken :exec
+DELETE FROM refresh_tokens
 WHERE token = $1;
+
+-- name: DoesRefreshTokenExist :one
+SELECT 1 FROM refresh_tokens
+WHERE token = $1 AND expires_at > NOW();

@@ -61,38 +61,36 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 	return i, err
 }
 
-const deleteRefreshToken = `-- name: DeleteRefreshToken :one
-SELECT token, created_at, updated_at, user_id, expires_at FROM refresh_tokens
+const deleteRefreshToken = `-- name: DeleteRefreshToken :exec
+DELETE FROM refresh_tokens
 WHERE token = $1
 `
 
-func (q *Queries) DeleteRefreshToken(ctx context.Context, token string) (RefreshToken, error) {
-	row := q.db.QueryRow(ctx, deleteRefreshToken, token)
-	var i RefreshToken
-	err := row.Scan(
-		&i.Token,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UserID,
-		&i.ExpiresAt,
-	)
-	return i, err
+func (q *Queries) DeleteRefreshToken(ctx context.Context, token string) error {
+	_, err := q.db.Exec(ctx, deleteRefreshToken, token)
+	return err
+}
+
+const doesRefreshTokenExist = `-- name: DoesRefreshTokenExist :one
+SELECT 1 FROM refresh_tokens
+WHERE token = $1 AND expires_at > NOW()
+`
+
+func (q *Queries) DoesRefreshTokenExist(ctx context.Context, token string) (int32, error) {
+	row := q.db.QueryRow(ctx, doesRefreshTokenExist, token)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getUserFromRefreshTok = `-- name: GetUserFromRefreshTok :one
-SELECT token, created_at, updated_at, user_id, expires_at FROM refresh_tokens
+SELECT user_id FROM refresh_tokens
 WHERE token = $1
 `
 
-func (q *Queries) GetUserFromRefreshTok(ctx context.Context, token string) (RefreshToken, error) {
+func (q *Queries) GetUserFromRefreshTok(ctx context.Context, token string) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, getUserFromRefreshTok, token)
-	var i RefreshToken
-	err := row.Scan(
-		&i.Token,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UserID,
-		&i.ExpiresAt,
-	)
-	return i, err
+	var user_id pgtype.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
 }

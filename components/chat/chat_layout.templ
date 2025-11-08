@@ -11,12 +11,6 @@ templ ChatLayout() {
 			<script>
 				let messageArea = document.getElementById("message-area");
 
-        document.body.addEventListener("htmx:responseError", (event) => {
-          if (event.detail.xhr.status === 401) {
-            htmx.ajax("GET", "/api/token/refresh");
-          }
-        });
-
 				// Add auto-scroll mechanism on new messages, with animation.
 				document.body.addEventListener("htmx:oobAfterSwap", () => {
 					messageArea.scroll({ top: messageArea.scrollHeight, behavior: "smooth" })
@@ -27,15 +21,14 @@ templ ChatLayout() {
           initialLoad = true;
         });
 
-        let lastMsg = messageArea?.lastElementChild;
-        let since = lastMsg?.dataset.timestamp;
         document.body.addEventListener("htmx:wsConnecting", () => {
           if (!initialLoad) {
             return;
           }
 
-          lastMsg = messageArea?.lastElementChild;
-          since = lastMsg?.dataset.timestamp;
+          let lastMsg = messageArea?.lastElementChild;
+          let since = lastMsg?.dataset.timestamp;
+
           if (!since) {
             return
           }
