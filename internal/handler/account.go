@@ -66,7 +66,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		}
 
 		r = r.WithContext(context.WithValue(ctx, auth.UserIDKey, uuid.UUID(user.UserID.Bytes)))
-		refreshTok, err := auth.MakeRefreshToken(r.Context(), db)
+		refreshToken, err := auth.MakeRefreshToken(r.Context(), db)
 		if err != nil {
 			log.Printf("handler/account/login: failed to create refresh token: %v", err)
 			return
@@ -93,7 +93,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		// Set another cookie for refresh tokens. Expires in 7 days.
 		http.SetCookie(w, &http.Cookie{
 			Name:        "refresh_token",
-			Value:       refreshTok,
+			Value:       refreshToken,
 			Quoted:      false,
 			Path:        "/",
 			Domain:      "",
