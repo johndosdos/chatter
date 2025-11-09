@@ -71,26 +71,23 @@ func (q *Queries) DeleteRefreshToken(ctx context.Context, token string) error {
 	return err
 }
 
-const doesRefreshTokenExist = `-- name: DoesRefreshTokenExist :one
-SELECT 1 FROM refresh_tokens
+const getRefreshToken = `-- name: GetRefreshToken :one
+SELECT token, created_at, updated_at, user_id, expires_at FROM refresh_tokens
 WHERE token = $1 AND expires_at > NOW()
 `
 
-func (q *Queries) DoesRefreshTokenExist(ctx context.Context, token string) (int32, error) {
-	row := q.db.QueryRow(ctx, doesRefreshTokenExist, token)
-	var column_1 int32
-	err := row.Scan(&column_1)
-	return column_1, err
+func (q *Queries) GetRefreshToken(ctx context.Context, token string) (RefreshToken, error) {
+	row := q.db.QueryRow(ctx, getRefreshToken, token)
+	var i RefreshToken
+	err := row.Scan(
+		&i.Token,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+		&i.ExpiresAt,
+	)
+	return i, err
 }
 
-const getUserFromRefreshTok = `-- name: GetUserFromRefreshTok :one
-SELECT user_id FROM refresh_tokens
-WHERE token = $1
-`
-
-func (q *Queries) GetUserFromRefreshTok(ctx context.Context, token string) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, getUserFromRefreshTok, token)
-	var user_id pgtype.UUID
-	err := row.Scan(&user_id)
-	return user_id, err
+const updateRefreshToken = `-- name: UpdateRefreshToken :one
 }

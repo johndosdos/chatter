@@ -19,12 +19,12 @@ func RefreshSession(w http.ResponseWriter, r *http.Request, db *database.Queries
 		return uuid.UUID{}, nil
 	}
 
-	userID, err := db.GetUserFromRefreshTok(r.Context(), refreshTokCookie.Value)
+	refreshTokenDB, err := db.GetRefreshToken(r.Context(), refreshTokCookie.Value)
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("internal/auth: failed to retrieve user from refresh token: %v", err)
+		return uuid.UUID{}, fmt.Errorf("internal/auth: failed to get refresh token from DB: %v", err)
 	}
 
-	jwt, err := MakeJWT(userID.Bytes, os.Getenv("JWT_SECRET"), 5*time.Minute)
+	jwt, err := MakeJWT(refreshTokenDB.UserID.Bytes, os.Getenv("JWT_SECRET"), 5*time.Minute)
 	if err != nil {
 		return uuid.UUID{}, fmt.Errorf("internal/auth: failed to make JWT: %v", err)
 	}
@@ -47,5 +47,5 @@ func RefreshSession(w http.ResponseWriter, r *http.Request, db *database.Queries
 		Unparsed:    []string{},
 	})
 
-	return userID.Bytes, nil
+	return refreshTokenDB.UserID.Bytes, nil
 }

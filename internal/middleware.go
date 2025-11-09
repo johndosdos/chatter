@@ -18,7 +18,7 @@ func Middleware(next http.Handler, db *database.Queries) http.HandlerFunc {
 		// our /chat endpoint.
 		refreshTokCookie, err := r.Cookie("refresh_token")
 		if err == nil {
-			_, err = db.DoesRefreshTokenExist(r.Context(), refreshTokCookie.Value)
+			_, err = db.GetRefreshToken(r.Context(), refreshTokCookie.Value)
 			if err != nil {
 				http.Redirect(w, r, "/account/login", http.StatusSeeOther)
 				return
