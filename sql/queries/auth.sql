@@ -10,10 +10,9 @@ RETURNING *;
 
 -- name: GetRefreshToken :one
 SELECT * FROM refresh_tokens
-WHERE token = $1 AND expires_at > NOW();
+WHERE token = $1 AND expires_at > NOW() AND valid = TRUE;
 
--- name: DeleteRefreshToken :exec
-DELETE FROM refresh_tokens
+-- name: RevokeRefreshToken :exec
+UPDATE refresh_tokens
+SET revoked_at = NOW(), valid = FALSE
 WHERE token = $1;
-
--- name: UpdateRefreshToken :one

@@ -33,7 +33,7 @@ func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) 
 const createRefreshToken = `-- name: CreateRefreshToken :one
 INSERT INTO refresh_tokens (token, created_at, user_id, expires_at)
 VALUES ($1, $2, $3, $4)
-RETURNING token, created_at, updated_at, user_id, expires_at
+RETURNING token, user_id, created_at, expires_at, revoked_at, valid
 `
 
 type CreateRefreshTokenParams struct {
@@ -53,27 +53,18 @@ func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshToken
 	var i RefreshToken
 	err := row.Scan(
 		&i.Token,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.UserID,
+		&i.CreatedAt,
 		&i.ExpiresAt,
+		&i.RevokedAt,
+		&i.Valid,
 	)
 	return i, err
 }
 
-const deleteRefreshToken = `-- name: DeleteRefreshToken :exec
-DELETE FROM refresh_tokens
-WHERE token = $1
-`
-
-func (q *Queries) DeleteRefreshToken(ctx context.Context, token string) error {
-	_, err := q.db.Exec(ctx, deleteRefreshToken, token)
-	return err
-}
-
 const getRefreshToken = `-- name: GetRefreshToken :one
-SELECT token, created_at, updated_at, user_id, expires_at FROM refresh_tokens
-WHERE token = $1 AND expires_at > NOW()
+SELECT token, user_id, created_at, expires_at, revoked_at, valid FROM refresh_tokens
+WHERE token = $1 AND expires_at > NOW() AND valid = TRUE
 `
 
 func (q *Queries) GetRefreshToken(ctx context.Context, token string) (RefreshToken, error) {
@@ -81,13 +72,22 @@ func (q *Queries) GetRefreshToken(ctx context.Context, token string) (RefreshTok
 	var i RefreshToken
 	err := row.Scan(
 		&i.Token,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.UserID,
+		&i.CreatedAt,
 		&i.ExpiresAt,
+		&i.RevokedAt,
+		&i.Valid,
 	)
 	return i, err
 }
 
-const updateRefreshToken = `-- name: UpdateRefreshToken :one
+const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
+UPDATE refresh_tokens
+SET revoked_at = NOW(), valid = FALSE
+WHERE token = $1
+`
+
+func (q *Queries) RevokeRefreshToken(ctx context.Context, token string) error {
+	_, err := q.db.Exec(ctx, revokeRefreshToken, token)
+	return err
 }

@@ -2,10 +2,11 @@
 -- +goose StatementBegin
 CREATE TABLE refresh_tokens (
   token VARCHAR NOT NULL PRIMARY KEY,
-  created_at TIMESTAMPTZ NOT NULL,
-  updated_at TIMESTAMPTZ,
   user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-  expires_at TIMESTAMPTZ NOT NULL
+  created_at TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  revoked_at TIMESTAMPTZ,
+  valid BOOLEAN DEFAULT TRUE
 );
 -- +goose StatementEnd
 

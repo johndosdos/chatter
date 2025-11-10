@@ -22,10 +22,11 @@ type Password struct {
 
 type RefreshToken struct {
 	Token     string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
 	UserID    pgtype.UUID
+	CreatedAt pgtype.Timestamptz
 	ExpiresAt pgtype.Timestamptz
+	RevokedAt pgtype.Timestamptz
+	Valid     pgtype.Bool
 }
 
 type User struct {
