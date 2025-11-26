@@ -1,0 +1,36 @@
+# https://taskfile.dev
+
+version: '3'
+
+dotenv: ['.env.development']
+
+tasks:
+  dev:
+    cmds:
+      - task: css
+      - task: templ
+      - task: server
+    silent: true
+
+  server:
+    cmds:
+      - golangci-lint && govulncheck
+      - 'wgo -file .templ -xfile ._templ.go -file .go go build -o ./bin/ ./main.go :: ./bin/main'
+
+  templ:
+    cmds:
+      - templ generate
+
+    sources:
+      - ./components/**/*.templ
+    generates:
+      - ./components/**/*_templ.go
+
+  css:
+    cmds:
+      - npm run build:css
+
+    sources:
+      - ./static/input.css
+    generates:
+      - ./static/output.css
