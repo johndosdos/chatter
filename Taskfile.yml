@@ -28,7 +28,7 @@ tasks:
 
   css:
     cmds:
-      - npm run build:css
+      - bun run build:css
 
     sources:
       - ./static/input.css
