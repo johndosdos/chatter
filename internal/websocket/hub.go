@@ -6,79 +6,94 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/johndosdos/chatter/internal/chat"
+	"github.com/johndosdos/chatter/internal/broker"
 	"github.com/johndosdos/chatter/internal/database"
+	"github.com/johndosdos/chatter/internal/model"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/nats-io/nats.go/jetstream"
 )
-
-// Hub contains functions needed for thee app state management.
-type Hub struct {
-	clients    map[uuid.UUID]*Client
-	Register   chan *Client
-	Unregister chan *Client
-	accept     chan chat.Message
-	sendToDb   chan chat.Message
-	sanitizer  sanitizer
-	Ok         chan bool
-}
 
 type sanitizer interface {
 	Sanitize(s string) string
 	SanitizeBytes(p []byte) []byte
 }
 
+// Hub contains functions needed for thee app state management.
+type Hub struct {
+	db         *database.Queries
+	jetstream  jetstream.JetStream
+	clients    map[uuid.UUID]*Client
+	Register   chan *Client
+	Unregister chan *Client
+	fromClient chan model.Message
+	FromWorker chan model.Message
+	sanitizer  sanitizer
+	Ok         chan bool
+}
+
 // Run manages incoming and outgoing hub traffic.
-func (h *Hub) Run(ctx context.Context, db *database.Queries) {
+func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
 		case client := <-h.Register:
 			h.clients[client.UserID] = client
 			client.Hub = h
 			h.Ok <- true
+
 		case client := <-h.Unregister:
 			delete(h.clients, client.UserID)
-			close(client.Recv)
-		case message := <-h.accept:
+			close(client.FromHub)
+
+		case payload := <-h.fromClient:
 			// We need to sanitize incoming messages to prevent XSS.
-			sanitized := h.sanitizer.Sanitize(message.Content)
-			message.Content = sanitized
-			h.DbStoreMessage(ctx, db, message)
-			for _, client := range h.clients {
-				client.Recv <- message
+			sanitized := h.sanitizer.Sanitize(payload.Content)
+			payload.Content = sanitized
+
+			message := database.CreateMessageParams{
+				UserID:  pgtype.UUID{Bytes: [16]byte(payload.UserID), Valid: true},
+				Content: string(payload.Content),
+				CreatedAt: pgtype.Timestamptz{
+					Time:             payload.CreatedAt,
+					InfinityModifier: 0,
+					Valid:            true,
+				},
 			}
+
+			_, err := h.db.CreateMessage(ctx, message)
+			if err != nil {
+				log.Printf("worker/database: failed to store payload to database: %v", err)
+				continue
+			}
+
+			err = broker.Publisher(ctx, h.jetstream, payload)
+			if err != nil {
+				log.Printf("worker/database: %v", err)
+				continue
+			}
+
+		case payload := <-h.FromWorker:
+			for _, client := range h.clients {
+				client.FromHub <- payload
+			}
+
 		case <-ctx.Done():
-			log.Printf("websocket/hub/run: context cancelled: %v", ctx.Err().Error())
+			log.Printf("websocket/hub: context cancelled: %v", ctx.Err())
 			return
 		}
 	}
 }
 
-// DbStoreMessage creates a new message entry to the database.
-func (h *Hub) DbStoreMessage(ctx context.Context, db *database.Queries, message chat.Message) {
-	_, err := db.CreateMessage(ctx, database.CreateMessageParams{
-		UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
-		Content: string(message.Content),
-		CreatedAt: pgtype.Timestamptz{
-			Time:             message.CreatedAt,
-			InfinityModifier: 0,
-			Valid:            true,
-		},
-	})
-	if err != nil {
-		log.Printf("websocket/hub/db: failed to store message to database: %v", err)
-		return
-	}
-}
-
 // NewHub returns a new instance of Hub.
-func NewHub() *Hub {
+func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
 	return &Hub{
+		db:         db,
+		jetstream:  js,
 		clients:    make(map[uuid.UUID]*Client),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
-		accept:     make(chan chat.Message),
-		sendToDb:   make(chan chat.Message),
+		fromClient: make(chan model.Message, 1024),
+		FromWorker: make(chan model.Message, 1024),
 		sanitizer:  bluemonday.StrictPolicy(),
-		Ok:         make(chan bool),
+		Ok:         make(chan bool, 64),
 	}
 }

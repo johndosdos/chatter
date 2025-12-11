@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	components "github.com/johndosdos/chatter/components/chat"
-	"github.com/johndosdos/chatter/internal/chat"
+	"github.com/johndosdos/chatter/internal/model"
 )
 
 // Client contains client connection information.
@@ -19,7 +19,7 @@ type Client struct {
 	Username string
 	conn     *websocket.Conn
 	Hub      *Hub
-	Recv     chan chat.Message
+	FromHub  chan model.Message
 }
 
 const pongWait = 60 * time.Second
@@ -27,8 +27,8 @@ const pongWait = 60 * time.Second
 // NewClient returns a new instance of Client.
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		conn: conn,
-		Recv: make(chan chat.Message, 64),
+		conn:    conn,
+		FromHub: make(chan model.Message, 64),
 	}
 }
 
@@ -40,10 +40,10 @@ func (c *Client) WriteMessage() {
 	// In order to group messages by sender, we need to reference the
 	// previous message. We can achieve this by setting the current
 	// message as the previous after processing.
-	var prevMsg chat.Message
+	var prevMsg model.Message
 	for {
 		select {
-		case message, ok := <-c.Recv:
+		case message, ok := <-c.FromHub:
 			// Stop the process if the recv channel closed.
 			if !ok {
 				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
@@ -127,17 +127,17 @@ func (c *Client) ReadMessage() {
 		// We need to unmarshal the JSON sent from the client side. HTMX's ws-send
 		// attribute will also send a HEADERS field along with the client message.
 		// Also, set CreatedAt to the current time.
-		message := chat.Message{
+		payload := model.Message{
 			UserID:    c.UserID,
 			Username:  c.Username,
 			CreatedAt: time.Now().UTC(),
 		}
-		err = json.Unmarshal(p, &message)
+		err = json.Unmarshal(p, &payload)
 		if err != nil {
 			log.Printf("websocket/client/read: failed to process payload from client: %v", err)
-			break
+			continue
 		}
 
-		c.Hub.accept <- message
+		c.Hub.fromClient <- payload
 	}
 }

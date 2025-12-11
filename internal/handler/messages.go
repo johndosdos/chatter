@@ -10,8 +10,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/johndosdos/chatter/internal/auth"
-	"github.com/johndosdos/chatter/internal/chat"
 	"github.com/johndosdos/chatter/internal/database"
+	"github.com/johndosdos/chatter/internal/model"
 
 	viewChat "github.com/johndosdos/chatter/components/chat"
 )
@@ -41,9 +41,9 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		var prevMsg chat.Message
+		var prevMsg model.Message
 		for _, msg := range dbMessageList {
-			message := chat.Message{
+			message := model.Message{
 				UserID:    msg.UserID.Bytes,
 				Username:  msg.Username,
 				Content:   msg.Content,

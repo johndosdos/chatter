@@ -10,17 +10,16 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/johndosdos/chatter/internal"
+	"github.com/johndosdos/chatter/internal/broker"
+	"github.com/johndosdos/chatter/internal/broker/worker"
 	"github.com/johndosdos/chatter/internal/database"
 	ws "github.com/johndosdos/chatter/internal/websocket"
 
 	"github.com/johndosdos/chatter/internal/handler"
-)
-
-var (
-	dbConn    *pgxpool.Pool
-	dbQueries *database.Queries
 )
 
 func main() {
@@ -29,19 +28,45 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	var err error
-	dbURL := os.Getenv("DB_URL")
-	dbConn, err = pgxpool.New(ctx, dbURL)
+	// Init NATS
+	natsURL := os.Getenv("NATS_URL")
+
+	conn, err := nats.Connect(natsURL)
 	if err != nil {
-		log.Printf("main: cannot connect to postgresql database: %v", err)
-		return
+		log.Fatalf("main: %v", err)
 	}
-	dbQueries = database.New(dbConn)
+	defer conn.Drain()
+
+	js, err := jetstream.New(conn)
+	if err != nil {
+		log.Fatalf("main: %v", err)
+	}
+
+	stream, err := js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
+		Name:     broker.StreamName,
+		Subjects: []string{broker.SubjectGlobalRoom},
+	})
+	if err != nil {
+		log.Fatalf("main: %v", err)
+	}
+
+	// Init DB
+	dbURL := os.Getenv("DB_URL")
+	dbConn, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		log.Fatalf("main: could not connect to the postgresql database: %v", err)
+	}
+	dbQueries := database.New(dbConn)
 
 	// hub.Run is our central hub that is always listening for client related
 	// events.
-	hub := ws.NewHub()
-	go hub.Run(ctx, dbQueries)
+	hub := ws.NewHub(js, dbQueries)
+	go hub.Run(ctx)
+
+	err = broker.Subscriber(ctx, stream, worker.WorkerHub(hub))
+	if err != nil {
+		log.Printf("main: could not connect to the postgresql database: %v", err)
+	}
 
 	server := &http.Server{
 		Addr:              ":8080",
@@ -64,8 +89,6 @@ func main() {
 	http.Handle("/chat", internal.Middleware(handler.ServeChat(), dbQueries))
 
 	http.Handle("/", handler.ServeRoot())
-
-	defer dbConn.Close()
 
 	log.Println("Server starting at port", server.Addr)
 	log.Fatal(server.ListenAndServe())

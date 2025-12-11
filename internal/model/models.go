@@ -1,5 +1,5 @@
-// Package chat provides functions related to chat messages.
-package chat
+// Package model defines data structure.
+package model
 
 import (
 	"time"
