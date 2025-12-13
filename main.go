@@ -31,7 +31,7 @@ func main() {
 	// Init NATS
 	natsURL := os.Getenv("NATS_URL")
 
-	conn, err := nats.Connect(natsURL)
+	conn, err := nats.Connect(natsURL, nats.UserInfo(os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD")))
 	if err != nil {
 		log.Fatalf("main: %v", err)
 	}
