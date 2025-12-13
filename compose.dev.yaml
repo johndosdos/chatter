@@ -1,0 +1,14 @@
+services:
+  server:
+    build:
+      context: .
+      target: dev
+    restart: always
+    command: >
+      /bin/sh -c
+      "pnpm run watch:css &
+      wgo -file .templ -xfile ._templ.go templ generate ::
+      go run ./main.go"
+    volumes:
+      - .:/goapp
+      - /goapp/node_modules

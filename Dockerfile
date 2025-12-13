@@ -1,32 +1,36 @@
-# Build the backend.
-FROM golang:1.25-alpine AS builder
-WORKDIR /app
+FROM golang:1.25-alpine AS base
+WORKDIR /goapp
 
-# Install sqlc CLI for schemas
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-# Install goose CLI for migrations
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+RUN apk add --no-cache pnpm
+COPY package.json pnpm-lock.yaml .
+RUN pnpm install --frozen-lockfile
 
-# Install dotenvx for injecting production database string
-RUN apk add --no-cache curl
-RUN curl -sfS https://dotenvx.sh | sh
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+    go install github.com/pressly/goose/v3/cmd/goose@latest && \
+    go install github.com/a-h/templ/cmd/templ@latest
 
-COPY go.mod go.sum ./
-RUN go mod download
-COPY ./ ./
 
-# Run sqlc
-RUN sqlc generate -f ./sqlc.yaml
+COPY go.mod go.sum .
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /server .
+FROM base AS dev
+RUN --mount=type=cache,target=/go/pkg/mod go install github.com/bokwoon95/wgo@latest
 
-# Create the final image.
-FROM scratch
+FROM base AS builder
+COPY . .
+RUN templ generate
+RUN sqlc generate -f sqlc.yaml
+RUN pnpm run build:css
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -o /server .
+
+FROM scratch AS final
 COPY --from=builder /server /server
+COPY --from=builder /goapp/static /static
+COPY --from=builder /goapp/sql /sql
 COPY --from=builder /go/bin/goose /goose
-COPY --from=builder /app/static ./static
-COPY --from=builder /usr/local/bin/dotenvx /dotenvx
-COPY --from=builder /app/.env.production .env.production
 
 EXPOSE 8080
-CMD [ "/dotenvx", "run", "-f", ".env.production", "--", "/server" ]
+ENTRYPOINT ["/server"]
