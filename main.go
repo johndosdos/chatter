@@ -15,9 +15,8 @@ import (
 
 	"github.com/johndosdos/chatter/internal"
 	"github.com/johndosdos/chatter/internal/broker"
-	"github.com/johndosdos/chatter/internal/broker/worker"
+	"github.com/johndosdos/chatter/internal/chat"
 	"github.com/johndosdos/chatter/internal/database"
-	ws "github.com/johndosdos/chatter/internal/websocket"
 
 	"github.com/johndosdos/chatter/internal/handler"
 )
@@ -33,13 +32,13 @@ func main() {
 
 	conn, err := nats.Connect(natsURL, nats.UserInfo(os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD")))
 	if err != nil {
-		log.Fatalf("main: %v", err)
+		log.Fatalf("%v", err)
 	}
 	defer conn.Drain()
 
 	js, err := jetstream.New(conn)
 	if err != nil {
-		log.Fatalf("main: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	stream, err := js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
@@ -47,33 +46,26 @@ func main() {
 		Subjects: []string{broker.SubjectGlobalRoom},
 	})
 	if err != nil {
-		log.Fatalf("main: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	// Init DB
 	dbURL := os.Getenv("DB_URL")
 	dbConn, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
-		log.Fatalf("main: could not connect to the postgresql database: %v", err)
+		log.Fatalf("could not connect to the postgresql database: %v", err)
 	}
 	dbQueries := database.New(dbConn)
 
 	// hub.Run is our central hub that is always listening for client related
 	// events.
-	hub := ws.NewHub(js, dbQueries)
-	go hub.Run(ctx)
-
-	err = broker.Subscriber(ctx, stream, worker.WorkerHub(hub))
-	if err != nil {
-		log.Printf("main: could not connect to the postgresql database: %v", err)
-	}
+	hub := chat.NewHub(js, dbQueries)
+	go hub.Run(ctx, stream)
 
 	server := &http.Server{
 		Addr:              ":8080",
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      15 * time.Second,
-		IdleTimeout:       30 * time.Second,
 	}
 
 	fs := http.FileServer(http.Dir("static"))
@@ -85,8 +77,9 @@ func main() {
 	// Load chat history on HTTP GET on initial connection before starting websockets.
 	// This is to prevent issues regarding resending chat history on websocket reconnection.
 	http.Handle("/messages", internal.Middleware(handler.ServeMessages(dbQueries), dbQueries))
-	http.Handle("/ws", internal.Middleware(handler.ServeWs(hub, dbQueries), dbQueries))
+	http.Handle("/stream", internal.Middleware(handler.StreamSSE(hub, dbQueries), dbQueries))
 	http.Handle("/chat", internal.Middleware(handler.ServeChat(), dbQueries))
+	http.Handle("/send", internal.Middleware(chat.Send(hub, dbQueries), dbQueries))
 
 	http.Handle("/", handler.ServeRoot())
 

@@ -31,7 +31,7 @@ const UserIDKey ContextKey = "userId"
 func HashPassword(password string) (string, error) {
 	hashedPw, err := argon2id.CreateHash(password, argon2id.DefaultParams)
 	if err != nil {
-		return "", fmt.Errorf("internal/auth: pw hash failed: %w", err)
+		return "", fmt.Errorf("pw hash failed: %w", err)
 	}
 
 	return hashedPw, nil
@@ -42,10 +42,10 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) (bool, error) {
 	isMatch, err := argon2id.ComparePasswordAndHash(password, hash)
 	if err != nil {
-		return false, fmt.Errorf("internal/auth: pw and hash comparison failed: %w", err)
+		return false, fmt.Errorf("pw and hash comparison failed: %w", err)
 	}
 	if !isMatch {
-		return false, errors.New("internal/auth: pw and hash do not match")
+		return false, errors.New("pw and hash do not match")
 	}
 
 	return isMatch, nil
@@ -76,11 +76,11 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 		jwt.WithExpirationRequired(),
 	)
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("internal/auth: failed to parse token: %w", err)
+		return uuid.UUID{}, fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if !token.Valid {
-		return uuid.UUID{}, errors.New("internal/auth: token is invalid")
+		return uuid.UUID{}, errors.New("token is invalid")
 	}
 
 	if claims.Subject == "" {
@@ -130,12 +130,12 @@ func GetUserFromContext(ctx context.Context) (uuid.UUID, error) {
 func SetTokensAndCookies(w http.ResponseWriter, r *http.Request, db *database.Queries, userID uuid.UUID) error {
 	refreshToken, err := MakeRefreshToken(r.Context(), db, userID)
 	if err != nil {
-		return fmt.Errorf("internal/auth: failed to create refresh token: %v", err)
+		return fmt.Errorf("failed to create refresh token: %v", err)
 	}
 
 	jwt, err := MakeJWT(userID, os.Getenv("JWT_SECRET"), 5*time.Minute)
 	if err != nil {
-		return fmt.Errorf("internal/auth: failed to make JWT: %v", err)
+		return fmt.Errorf("failed to make JWT: %v", err)
 	}
 
 	// Set cookie for access token. Expires in 5 minutes.

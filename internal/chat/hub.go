@@ -1,4 +1,4 @@
-package websocket
+package chat
 
 import (
 	"context"
@@ -25,14 +25,19 @@ type Hub struct {
 	clients    map[uuid.UUID]*Client
 	Register   chan *Client
 	Unregister chan *Client
-	fromClient chan model.Message
-	FromWorker chan model.Message
+	BrokerMsg  chan model.Message
+	ClientMsg  chan model.Message
 	sanitizer  sanitizer
 	Ok         chan bool
 }
 
 // Run manages incoming and outgoing hub traffic.
-func (h *Hub) Run(ctx context.Context) {
+func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
+	err := broker.Subscriber(ctx, js, h.BrokerMsg)
+	if err != nil {
+		log.Printf("could not connect to the postgresql database: %v", err)
+	}
+
 	for {
 		select {
 		case client := <-h.Register:
@@ -42,42 +47,40 @@ func (h *Hub) Run(ctx context.Context) {
 
 		case client := <-h.Unregister:
 			delete(h.clients, client.UserID)
-			close(client.FromHub)
+			close(client.MessageCh)
 
-		case payload := <-h.fromClient:
-			// We need to sanitize incoming messages to prevent XSS.
-			sanitized := h.sanitizer.Sanitize(payload.Content)
-			payload.Content = sanitized
+		case message := <-h.ClientMsg:
+			_, err := broker.Publisher(ctx, h.jetstream, message)
+			if err != nil {
+				log.Printf("%v", err)
+				continue
+			}
 
-			message := database.CreateMessageParams{
-				UserID:  pgtype.UUID{Bytes: [16]byte(payload.UserID), Valid: true},
-				Content: string(payload.Content),
+			// message.SequenceID = sequenceID
+
+			messageParams := database.CreateMessageParams{
+				UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
+				Content: string(message.Content),
 				CreatedAt: pgtype.Timestamptz{
-					Time:             payload.CreatedAt,
+					Time:             message.CreatedAt,
 					InfinityModifier: 0,
 					Valid:            true,
 				},
 			}
 
-			_, err := h.db.CreateMessage(ctx, message)
+			_, err = h.db.CreateMessage(ctx, messageParams)
 			if err != nil {
-				log.Printf("worker/database: failed to store payload to database: %v", err)
+				log.Printf("failed to store payload to database: %v", err)
 				continue
 			}
 
-			err = broker.Publisher(ctx, h.jetstream, payload)
-			if err != nil {
-				log.Printf("worker/database: %v", err)
-				continue
-			}
-
-		case payload := <-h.FromWorker:
-			for _, client := range h.clients {
-				client.FromHub <- payload
+		case payload := <-h.BrokerMsg:
+			for _, c := range h.clients {
+				c.MessageCh <- payload
 			}
 
 		case <-ctx.Done():
-			log.Printf("websocket/hub: context cancelled: %v", ctx.Err())
+			log.Printf("context cancelled: %v", ctx.Err())
 			return
 		}
 	}
@@ -91,8 +94,8 @@ func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
 		clients:    make(map[uuid.UUID]*Client),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
-		fromClient: make(chan model.Message, 1024),
-		FromWorker: make(chan model.Message, 1024),
+		BrokerMsg:  make(chan model.Message, 1024),
+		ClientMsg:  make(chan model.Message, 1024),
 		sanitizer:  bluemonday.StrictPolicy(),
 		Ok:         make(chan bool, 64),
 	}

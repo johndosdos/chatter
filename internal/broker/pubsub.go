@@ -6,39 +6,41 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/johndosdos/chatter/internal/model"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-func Publisher(ctx context.Context, js jetstream.JetStream, payload model.Message) error {
+func Publisher(ctx context.Context, js jetstream.JetStream, payload model.Message) (uint64, error) {
 	if js == nil {
-		return fmt.Errorf("internal/broker: jetstream interface is nil")
+		return 0, fmt.Errorf("jetstream interface is nil")
 	}
 	if ctx == nil {
-		return fmt.Errorf("internal/broker: context is nil")
+		return 0, fmt.Errorf("context is nil")
 	}
 
 	p, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("internal/broker: could not encode payload to JSON: %w", err)
+		return 0, fmt.Errorf("could not encode payload to JSON: %w", err)
 	}
 
-	_, err = js.Publish(ctx,
+	pubAck, err := js.Publish(ctx,
 		SubjectGlobalRoom,
 		p,
+		jetstream.WithMsgID(uuid.NewString()),
 	)
 	if err != nil {
-		return fmt.Errorf("internal/broker: failed to publish to stream [%s]: %v", SubjectGlobalRoom, err)
+		return 0, fmt.Errorf("failed to publish to stream [%s]: %v", SubjectGlobalRoom, err)
 	}
-	log.Println("internal/broker: publish successful")
+	log.Printf("publish successful from [%s]\n", payload.Username)
 
-	return nil
+	return pubAck.Sequence, nil
 }
 
-func Subscriber(ctx context.Context, stream jetstream.Stream, handler func(model.Message)) error {
+func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan model.Message) error {
 	consumer, err := stream.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{})
 	if err != nil {
-		return fmt.Errorf("internal/broker: failed to create or update consumer: %w", err)
+		return fmt.Errorf("failed to create or update consumer: %w", err)
 	}
 
 	consumeHandler := func(msg jetstream.Msg) {
@@ -47,12 +49,12 @@ func Subscriber(ctx context.Context, stream jetstream.Stream, handler func(model
 		err := json.Unmarshal(msg.Data(), &payload)
 		if err != nil {
 			msg.Term()
-			log.Printf("internal/broker: could not decode payload: %v", err)
+			log.Printf("could not decode payload: %v", err)
 		}
 
-		handler(payload)
-
 		msg.Ack()
+
+		receiveMsg <- payload
 	}
 
 	optErrHandler := jetstream.ConsumeErrHandler(func(ctx jetstream.ConsumeContext, err error) {
@@ -68,7 +70,7 @@ func Subscriber(ctx context.Context, stream jetstream.Stream, handler func(model
 	*/
 	consumeCtx, err := consumer.Consume(consumeHandler, optErrHandler)
 	if err != nil {
-		return fmt.Errorf("internal/broker: failed to start consuming messages: %w", err)
+		return fmt.Errorf("failed to start consuming messages: %w", err)
 	}
 
 	go func(ctx context.Context, consumeCtx jetstream.ConsumeContext) {
