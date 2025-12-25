@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
 )
@@ -41,27 +41,20 @@ func Middleware(next http.Handler, db *database.Queries) http.HandlerFunc {
 		// to our /chat endpoint.
 		refreshTokenDB, err := db.GetRefreshToken(r.Context(), refreshTokCookie.Value)
 		if err != nil {
-			log.Printf("middleware: refresh token missing from the database: %v", err)
+			log.Printf("refresh token missing from the database: %v", err)
 			http.Redirect(w, r, "/account/login", http.StatusSeeOther)
 			return
 		}
 
-		// Check if refresh token is valid or not. If invalid, redirect user
-		// to the login page.
-		if refreshTokenDB.ExpiresAt.Time.After(time.Now().UTC()) ||
-			!refreshTokenDB.RevokedAt.Valid {
-			log.Printf("middleware: refresh token expired: %v", err)
-			http.Redirect(w, r, "/account/login", http.StatusSeeOther)
-			return
-		}
+		uid := uuid.UUID(refreshTokenDB.UserID.Bytes)
 
-		err = auth.SetTokensAndCookies(w, r, db, refreshTokenDB.UserID.Bytes)
+		err = auth.SetTokensAndCookies(w, r, db, uid)
 		if err != nil {
-			log.Printf("middleware: %v", err)
+			log.Printf("%v", err)
 			return
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), auth.UserIDKey, refreshTokenDB.UserID.Bytes))
+		r = r.WithContext(context.WithValue(r.Context(), auth.UserIDKey, uid))
 		next.ServeHTTP(w, r)
 	}
 }

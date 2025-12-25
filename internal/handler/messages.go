@@ -1,19 +1,15 @@
 package handler
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/a-h/templ"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/model"
 
-	viewChat "github.com/johndosdos/chatter/components/chat"
+	"github.com/johndosdos/chatter/components/chat"
 )
 
 // ServeMessages handles client message rendering. It will load recent
@@ -29,20 +25,22 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 		// Parse JWT and get UserID.
 		userID, err := auth.GetUserFromContext(ctx)
 		if err != nil {
-			log.Printf("handler/messages: %v", err)
+			log.Printf("%v", err)
 			return
 		}
 
-		since := r.URL.Query().Get("since")
-
-		dbMessageList, err := filterMessages(ctx, since, db)
+		msgLimit := 50
+		dbMessageList, err := db.ListMessages(ctx, int32(msgLimit))
 		if err != nil {
-			log.Printf("handler/messages: %v", err)
+			log.Printf("%v", err)
 			return
 		}
 
 		var prevMsg model.Message
-		for _, msg := range dbMessageList {
+
+		for i := len(dbMessageList) - 1; i >= 0; i-- {
+			msg := dbMessageList[i]
+
 			message := model.Message{
 				UserID:    msg.UserID.Bytes,
 				Username:  msg.Username,
@@ -61,40 +59,17 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			// Render message as sender or receiver.
 			var content templ.Component
 			if message.UserID == userID {
-				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = chat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			} else {
-				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = chat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
 			}
-			if err := content.Render(context.Background(), w); err != nil {
-				log.Printf("handler/messages: failed to render component: %v", err)
+
+			if err := content.Render(ctx, w); err != nil {
+				log.Printf("failed to render component: %v", err)
 				return
 			}
 
 			prevMsg = message
 		}
 	}
-}
-
-func filterMessages(ctx context.Context, since string, db *database.Queries) ([]database.ListMessagesRow, error) {
-	var dbMessageList []database.ListMessagesRow
-	var err error
-
-	if since != "" {
-		t, err := time.Parse(time.RFC3339Nano, since)
-		if err != nil {
-			return nil, fmt.Errorf("handler/messages: failed to parse time in specified format: %w", err)
-		}
-
-		dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: t, Valid: true})
-		if err != nil {
-			return nil, fmt.Errorf("handler/messages: failed to load messages from database: %w", err)
-		}
-	} else {
-		dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: time.Time{}, Valid: false})
-		if err != nil {
-			return nil, fmt.Errorf("handler/messages: failed to load messages from database: %w", err)
-		}
-	}
-
-	return dbMessageList, nil
 }

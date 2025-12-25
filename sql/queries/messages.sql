@@ -7,8 +7,5 @@ RETURNING *;
 SELECT m.*, u.username
 FROM messages m
 JOIN users u ON m.user_id = u.user_id
-WHERE (
-  sqlc.narg(since)::TIMESTAMPTZ IS NULL OR m.created_at > sqlc.arg(since)::TIMESTAMPTZ
-)
-ORDER BY m.created_at ASC
-LIMIT 50;
+ORDER BY created_at DESC
+LIMIT $1;

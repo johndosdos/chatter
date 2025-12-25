@@ -16,28 +16,7 @@ templ ChatLayout() {
 					messageArea.scroll({ top: messageArea.scrollHeight, behavior: "smooth" })
 				});
 
-        let initialLoad = false;
-        document.body.addEventListener("htmx:wsOpen", () => {
-          initialLoad = true;
-        });
-
-        document.body.addEventListener("htmx:wsConnecting", () => {
-          if (!initialLoad) {
-            return;
-          }
-
-          let lastMsg = messageArea?.lastElementChild;
-          let since = lastMsg?.dataset.timestamp;
-
-          if (!since) {
-            return
-          }
-
-          let url = new URL("/messages", window.location.origin);
-          url.searchParams.set("since", since);
-
-          htmx.ajax("GET", url.toString(), { target: "#message-area", swap: "beforeend" });
-        });
+        htmx.ajax("GET", "/messages", { target: "#message-area", swap: "beforeend" });
 			</script>
 		</div>
 	}

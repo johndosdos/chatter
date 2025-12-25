@@ -13,11 +13,13 @@ templ ChatInput() {
 		<form
 			id="form"
 			class="flex w-full items-center gap-2"
+			hx-post="/send"
+			hx-target="#message-area"
+			hx-swap="beforeend"
 			hx-trigger="submit"
 			hx-include="[name='content']"
-			hx-on::ws-config-send="if (this.elements.content.value.trim() === '') event.preventDefault()"
-			ws-send
-			hx-on::ws-after-send="this.reset()"
+			hx-on::config-request="if (this.elements.content.value.trim() === '') event.preventDefault()"
+			hx-on::after-request="this.reset()"
 		>
 			<div class="relative flex-shrink-0">
 				<button
