@@ -6,9 +6,7 @@ services:
     restart: always
     command: >
       /bin/sh -c
-      "pnpm run watch:css &
-      wgo -file .templ -xfile ._templ.go templ generate ::
-      go run ./main.go"
+      "wgo -poll 1s -file .go -file .templ -xfile ._templ.go pnpm run build:css :: templ generate :: go build -o /bin/main main.go :: /bin/main"
     volumes:
       - .:/goapp
       - /goapp/node_modules
