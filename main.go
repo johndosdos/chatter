@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,7 +25,7 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	// Init NATS
@@ -83,6 +84,11 @@ func main() {
 
 	http.Handle("/", handler.ServeRoot())
 
-	log.Println("Server starting at port", server.Addr)
-	log.Fatal(server.ListenAndServe())
+	go func(server *http.Server) {
+		log.Println("Server starting at port", server.Addr)
+		log.Fatal(server.ListenAndServe())
+	}(server)
+
+	<-ctx.Done()
+	log.Printf("Shutdown signal received; shutting down...")
 }
