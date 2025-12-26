@@ -341,6 +341,9 @@
   .flex-shrink-0 {
     flex-shrink: 0;
   }
+  .cursor-pointer {
+    cursor: pointer;
+  }
   .resize {
     resize: both;
   }

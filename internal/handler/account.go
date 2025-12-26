@@ -19,7 +19,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 
 		if r.Method != http.MethodPost {
 			if err := viewAuth.Login().Render(ctx, w); err != nil {
-				log.Printf("handler/account/login: failed to render component: %v", err)
+				log.Printf("failed to render component: %v", err)
 			}
 			return
 		}
@@ -27,7 +27,7 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Invalid form data.", http.StatusBadRequest)
-			log.Printf("handler/account/login: failed to parse form values: %v", err)
+			log.Printf("failed to parse form values: %v", err)
 			return
 		}
 
@@ -37,34 +37,36 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 		user, err := db.GetUserWithPasswordByEmail(ctx, email)
 		if err != nil {
 			if err := viewAuth.Error("Invalid email or password.").Render(ctx, w); err != nil {
-				log.Printf("handler/account/login: failed to render component: %v", err)
+				log.Printf("failed to render component: %v", err)
 				return
 			}
-			log.Printf("handler/account/login: failed to retrieve user from db: %v", err)
+			log.Printf("failed to retrieve user from db: %v", err)
 			return
 		}
 
 		ok, err := auth.CheckPasswordHash(password, user.HashedPassword)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
-			log.Printf("handler/account/login: cannot verify password — hash may be corrupted: %v", err)
+			log.Printf("cannot verify password — hash may be corrupted: %v", err)
 			return
 		}
 		if !ok {
 			if err := viewAuth.Error("Invalid email or password.").Render(ctx, w); err != nil {
-				log.Printf("handler/account/login: failed to render component: %v", err)
+				log.Printf("failed to render component: %v", err)
 			}
 			return
 		}
 
 		err = auth.SetTokensAndCookies(w, r, db, user.UserID.Bytes)
 		if err != nil {
-			log.Printf("handler/account/login: %v", err)
+			log.Printf("%v", err)
 			return
 		}
 
 		w.Header().Set("HX-Redirect", "/chat")
 		w.WriteHeader(http.StatusOK)
+
+		log.Printf("user [%s] logged in", user.Username)
 	}
 }
 
@@ -75,7 +77,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 
 		if r.Method != http.MethodPost {
 			if err := viewAuth.Signup().Render(ctx, w); err != nil {
-				log.Printf("handler/account/signup: failed to close connection: %v", err)
+				log.Printf("failed to close connection: %v", err)
 				return
 			}
 			return
@@ -84,7 +86,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		err := r.ParseForm()
 		if err != nil {
 			http.Error(w, "Invalid form data.", http.StatusBadRequest)
-			log.Printf("handler/account/signup: failed to parse form values: %v", err)
+			log.Printf("failed to parse form values: %v", err)
 			return
 		}
 
@@ -94,7 +96,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		// Validate password by comparing main and confirm.
 		if password != confirmPw {
 			if err := viewAuth.Error("Passwords do not match!").Render(ctx, w); err != nil {
-				log.Printf("handler/account/signup: failed to close connection: %v", err)
+				log.Printf("failed to close connection: %v", err)
 				return
 			}
 			return
@@ -109,7 +111,7 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		})
 		if err != nil {
 			http.Error(w, "Database error.", http.StatusInternalServerError)
-			log.Printf("handler/account/signup: failed to create user entry in database: %v", err)
+			log.Printf("failed to create user entry in database: %v", err)
 			return
 		}
 
@@ -117,14 +119,14 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 		hashedPw, err := auth.HashPassword(password)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
-			log.Printf("handler/account/signup: argon2id hash creation failed: %v", err)
+			log.Printf("argon2id hash creation failed: %v", err)
 			return
 		}
 
 		ok, err := auth.CheckPasswordHash(password, hashedPw)
 		if err != nil {
 			http.Error(w, "Server error.", http.StatusInternalServerError)
-			log.Printf("handler/account/signup: cannot verify password — hash may be corrupted: %v", err)
+			log.Printf("cannot verify password — hash may be corrupted: %v", err)
 			return
 		}
 
@@ -136,13 +138,15 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 			})
 			if err != nil {
 				http.Error(w, "Database error.", http.StatusInternalServerError)
-				log.Printf("handler/account/signup: failed to create password entry in database: %v", err)
+				log.Printf("failed to create password entry in database: %v", err)
 				return
 			}
 		}
 
 		w.Header().Set("HX-Redirect", "/account/login")
 		w.WriteHeader(http.StatusOK)
+
+		log.Printf("user [%s] registered", user.Username)
 	}
 }
 
@@ -154,7 +158,7 @@ func ServeLogout(db *database.Queries) http.HandlerFunc {
 
 		if r.Method != http.MethodPost {
 			if err := viewAuth.Login().Render(ctx, w); err != nil {
-				log.Printf("handler/account/logout: failed to render component: %v", err)
+				log.Printf("failed to render component: %v", err)
 			}
 			return
 		}
@@ -163,15 +167,34 @@ func ServeLogout(db *database.Queries) http.HandlerFunc {
 		if err == nil {
 			err = db.RevokeRefreshToken(ctx, refreshTok.Value)
 			if err != nil {
-				log.Printf("handler/account/logout: failed to process token deletion: %v", err)
-				return
+				log.Printf("failed to process token deletion: %v", err)
 			}
-
-			refreshTok.MaxAge = -1
-			http.SetCookie(w, refreshTok)
-			w.Header().Set("HX-Redirect", "/account/login")
-			w.WriteHeader(http.StatusOK)
-			return
 		}
+
+		clearCookie := func(w http.ResponseWriter, name string) {
+			http.SetCookie(w, &http.Cookie{
+				Name:        name,
+				Value:       "",
+				Quoted:      false,
+				Path:        "/",
+				Domain:      "",
+				Expires:     time.Time{},
+				RawExpires:  "",
+				MaxAge:      -1,
+				Secure:      true,
+				HttpOnly:    true,
+				SameSite:    http.SameSiteLaxMode,
+				Partitioned: false,
+				Raw:         "",
+				Unparsed:    []string{},
+			})
+		}
+
+		clearCookie(w, "jwt")
+		clearCookie(w, "refresh_token")
+		w.Header().Set("HX-Redirect", "/account/login")
+		w.WriteHeader(http.StatusOK)
+
+		log.Printf("user logged out")
 	}
 }
