@@ -65,6 +65,8 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 
 		w.Header().Set("HX-Redirect", "/chat")
 		w.WriteHeader(http.StatusOK)
+
+		log.Printf("user [%s] logged in", user.Username)
 	}
 }
 
@@ -143,6 +145,8 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 
 		w.Header().Set("HX-Redirect", "/account/login")
 		w.WriteHeader(http.StatusOK)
+
+		log.Printf("user [%s] registered", user.Username)
 	}
 }
 
@@ -164,14 +168,33 @@ func ServeLogout(db *database.Queries) http.HandlerFunc {
 			err = db.RevokeRefreshToken(ctx, refreshTok.Value)
 			if err != nil {
 				log.Printf("failed to process token deletion: %v", err)
-				return
 			}
-
-			refreshTok.MaxAge = -1
-			http.SetCookie(w, refreshTok)
-			w.Header().Set("HX-Redirect", "/account/login")
-			w.WriteHeader(http.StatusOK)
-			return
 		}
+
+		clearCookie := func(w http.ResponseWriter, name string) {
+			http.SetCookie(w, &http.Cookie{
+				Name:        name,
+				Value:       "",
+				Quoted:      false,
+				Path:        "/",
+				Domain:      "",
+				Expires:     time.Time{},
+				RawExpires:  "",
+				MaxAge:      -1,
+				Secure:      true,
+				HttpOnly:    true,
+				SameSite:    http.SameSiteLaxMode,
+				Partitioned: false,
+				Raw:         "",
+				Unparsed:    []string{},
+			})
+		}
+
+		clearCookie(w, "jwt")
+		clearCookie(w, "refresh_token")
+		w.Header().Set("HX-Redirect", "/account/login")
+		w.WriteHeader(http.StatusOK)
+
+		log.Printf("user logged out")
 	}
 }
