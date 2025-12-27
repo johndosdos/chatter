@@ -47,14 +47,13 @@ func StreamSSE(hub *chat.Hub, db *database.Queries) http.HandlerFunc {
 		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
 
 		// We'll register our new client to the central hub.
-		c := chat.NewClient()
-		c.UserID = user.UserID.Bytes
-		c.Username = user.Username
-
-		hub.Register <- c
-		// Ok is a signalling channel from our hub, indicating if registration was
-		// successful.
-		<-hub.Ok
+		c := chat.NewClient(user.UserID.Bytes, user.Username, hub)
+		reg := chat.Registration{
+			Client: c,
+			Done:   make(chan struct{}),
+		}
+		hub.Register <- reg
+		<-reg.Done
 		log.Printf("client [%s] connected\n", c.Username)
 
 		ticker := time.NewTicker(10 * time.Second)

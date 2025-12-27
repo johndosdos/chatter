@@ -21,12 +21,12 @@ type Client struct {
 }
 
 // NewClient returns a new instance of Client.
-func NewClient() *Client {
+func NewClient(userID uuid.UUID, username string, hub *Hub) *Client {
 	return &Client{
-		UserID:    uuid.UUID{},
-		Username:  "",
-		Hub:       &Hub{},
-		MessageCh: make(chan model.Message),
+		UserID:    userID,
+		Username:  username,
+		Hub:       hub,
+		MessageCh: make(chan model.Message, 64),
 	}
 }
 
