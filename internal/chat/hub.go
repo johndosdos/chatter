@@ -18,17 +18,21 @@ type sanitizer interface {
 	SanitizeBytes(p []byte) []byte
 }
 
+type Registration struct {
+	Client *Client
+	Done   chan struct{}
+}
+
 // Hub contains functions needed for thee app state management.
 type Hub struct {
 	db         *database.Queries
 	jetstream  jetstream.JetStream
 	clients    map[uuid.UUID]*Client
-	Register   chan *Client
+	Register   chan Registration
 	Unregister chan *Client
 	BrokerMsg  chan model.Message
 	ClientMsg  chan model.Message
 	sanitizer  sanitizer
-	Ok         chan bool
 }
 
 // Run manages incoming and outgoing hub traffic.
@@ -40,10 +44,10 @@ func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
 
 	for {
 		select {
-		case client := <-h.Register:
-			h.clients[client.UserID] = client
-			client.Hub = h
-			h.Ok <- true
+		case reg := <-h.Register:
+			c := reg.Client
+			h.clients[c.UserID] = c
+			close(reg.Done)
 
 		case client := <-h.Unregister:
 			delete(h.clients, client.UserID)
@@ -76,7 +80,11 @@ func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
 
 		case payload := <-h.BrokerMsg:
 			for _, c := range h.clients {
-				c.MessageCh <- payload
+				select {
+				case c.MessageCh <- payload:
+				default:
+					log.Println("skipping message payload...")
+				}
 			}
 
 		case <-ctx.Done():
@@ -92,11 +100,10 @@ func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
 		db:         db,
 		jetstream:  js,
 		clients:    make(map[uuid.UUID]*Client),
-		Register:   make(chan *Client),
+		Register:   make(chan Registration),
 		Unregister: make(chan *Client),
-		BrokerMsg:  make(chan model.Message, 1024),
-		ClientMsg:  make(chan model.Message, 1024),
+		BrokerMsg:  make(chan model.Message, 64),
+		ClientMsg:  make(chan model.Message, 64),
 		sanitizer:  bluemonday.StrictPolicy(),
-		Ok:         make(chan bool, 64),
 	}
 }

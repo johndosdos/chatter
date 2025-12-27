@@ -54,7 +54,11 @@ func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan mo
 
 		msg.Ack()
 
-		receiveMsg <- payload
+		select {
+		case receiveMsg <- payload:
+		default:
+			log.Println("skipping message payload")
+		}
 	}
 
 	optErrHandler := jetstream.ConsumeErrHandler(func(ctx jetstream.ConsumeContext, err error) {
