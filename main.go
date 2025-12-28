@@ -63,8 +63,12 @@ func main() {
 	hub := chat.NewHub(js, dbQueries)
 	go hub.Run(ctx, stream)
 
+	port, found := os.LookupEnv("PORT")
+	if !found {
+		port = "8080"
+	}
 	server := &http.Server{
-		Addr:              ":8080",
+		Addr:              ":" + port,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 	}
