@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -84,7 +83,7 @@ func StreamSSE(hub *chat.Hub, db *database.Queries) http.HandlerFunc {
 
 				var dataBuf bytes.Buffer
 
-				if err := comp.Render(context.Background(), &dataBuf); err != nil {
+				if err := comp.Render(ctx, &dataBuf); err != nil {
 					log.Printf("failed to render component: %v", err)
 					return
 				}

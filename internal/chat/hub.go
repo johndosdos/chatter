@@ -54,6 +54,22 @@ func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
 			close(client.MessageCh)
 
 		case message := <-h.ClientMsg:
+			sanitizedMsg := h.sanitizer.Sanitize(message.Content)
+			messageParams := database.CreateMessageParams{
+				UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
+				Content: sanitizedMsg,
+				CreatedAt: pgtype.Timestamptz{
+					Time:             message.CreatedAt,
+					InfinityModifier: 0,
+					Valid:            true,
+				},
+			}
+			_, err = h.db.CreateMessage(ctx, messageParams)
+			if err != nil {
+				log.Printf("failed to store payload to database: %v", err)
+				continue
+			}
+
 			_, err := broker.Publisher(ctx, h.jetstream, message)
 			if err != nil {
 				log.Printf("%v", err)
@@ -61,22 +77,6 @@ func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
 			}
 
 			// message.SequenceID = sequenceID
-
-			messageParams := database.CreateMessageParams{
-				UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
-				Content: string(message.Content),
-				CreatedAt: pgtype.Timestamptz{
-					Time:             message.CreatedAt,
-					InfinityModifier: 0,
-					Valid:            true,
-				},
-			}
-
-			_, err = h.db.CreateMessage(ctx, messageParams)
-			if err != nil {
-				log.Printf("failed to store payload to database: %v", err)
-				continue
-			}
 
 		case payload := <-h.BrokerMsg:
 			for _, c := range h.clients {
