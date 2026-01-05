@@ -29,9 +29,16 @@ func main() {
 	defer stop()
 
 	// Init NATS
+	var natsCredentials []nats.Option
 	natsURL := os.Getenv("NATS_URL")
 
-	conn, err := nats.Connect(natsURL, nats.UserInfo(os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD")))
+	if cred := os.Getenv("NATS_CRED"); cred != "" {
+		natsCredentials = append(natsCredentials, nats.UserCredentials(cred))
+	} else {
+		natsCredentials = append(natsCredentials, nats.UserInfo(os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD")))
+	}
+
+	conn, err := nats.Connect(natsURL, natsCredentials...)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
