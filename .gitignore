@@ -10,4 +10,5 @@ AGENTS.md
 *_llms.md
 bin/
 .task
-.github
+secret
+.env
