@@ -1,10 +1,22 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
-dotenv: ['.env.development']
+dotenv: [".env.development"]
 
 tasks:
+  up:
+    cmds:
+      - docker compose -f compose.yaml -f compose.dev.yaml up
+
+  down:
+    cmds:
+      - docker compose -f compose.yaml -f compose.dev.yaml down
+
+  up-build:
+    cmds:
+      - docker compose -f compose.yaml -f compose.dev.yaml up --build
+
   dev:
     cmds:
       - task: css
@@ -15,7 +27,7 @@ tasks:
   server:
     cmds:
       - golangci-lint && govulncheck
-      - 'wgo -file .templ -xfile ._templ.go -file .go go build -o ./bin/ ./main.go :: ./bin/main'
+      - "wgo -file .templ -xfile ._templ.go -file .go go build -o ./bin/ ./main.go :: ./bin/main"
 
   templ:
     cmds:
