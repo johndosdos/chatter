@@ -3,15 +3,13 @@ services:
     image: postgres:18-alpine
     container_name: chatter_db
     restart: always
-    environment: 
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: chatter
+    env_file:
+      - ./.env
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data 
-    healthcheck: 
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
       test: pg_isready -U ${DB_USER} -d chatter
       interval: 5s
       timeout: 5s
@@ -21,6 +19,8 @@ services:
     image: nats:alpine
     container_name: chatter_broker
     restart: always
+    env_file:
+      - ./.env
     command: --user ${NATS_USER} --pass ${NATS_PASSWORD} -js -m 8222 -sd /data
     ports:
       - "4222:4222"
@@ -35,18 +35,14 @@ services:
 
   server:
     container_name: chatter_app
-    depends_on: 
+    env_file:
+      - ./.env
+    depends_on:
       db:
         condition: service_healthy
       nats:
         condition: service_healthy
-    environment:
-      DB_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/chatter?sslmode=disable
-      NATS_URL: nats://${NATS_USER}:${NATS_PASSWORD}@nats:4222
-      JWT_SECRET: "${JWT_SECRET}"
-      GOOSE_DRIVER: postgres
-      GOOSE_DBSTRING: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/chatter?sslmode=disable
-      GOOSE_MIGRATION_DIR: ./sql/schema
+
     ports:
       - "8080:8080"
 
