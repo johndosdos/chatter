@@ -52,9 +52,6 @@ services:
     image: scanning5/chatter-server:latest
     container_name: chatter_app
     env_file: .env.prod
-    build:
-      context: .
-      target: final
     depends_on:
       db:
         condition: service_healthy
