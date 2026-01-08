@@ -22,8 +22,10 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(".env.prod"); err != nil {
-		log.Printf("failed to load .env file: %+v", err)
+	if os.Getenv("APP_ENV") != "production" {
+		if err := godotenv.Load(".env"); err != nil {
+			log.Printf("failed to load .env file: %+v", err)
+		}
 	}
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
