@@ -5,7 +5,7 @@
 
 Chatter is a real-time chat application. Users can hop in and send messages that are instantly broadcast to all connected clients.
 
-[Link to the app WIP]()
+[Link to the app](https://chatter.johndosdos.dev)
 
 ## Why I built this
 
