@@ -1,3 +1,6 @@
+![ci](https://github.com/johndosdos/learn-cicd-starter/actions/workflows/ci.yml/badge.svg)
+![cd](https://github.com/johndosdos/learn-cicd-starter/actions/workflows/cd.yml/badge.svg)
+
 # Chatter
 
 Chatter is a real-time chat application. Users can hop in and send messages that are instantly broadcast to all connected clients.
