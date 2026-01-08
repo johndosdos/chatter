@@ -3,6 +3,7 @@ options:
 
 substitutions:
   _REPO: asia-southeast1-docker.pkg.dev/chatter-app-483316/chatter-ar-repo/chatter-server
+  _TAG: latest
 
 steps:
   # 1. Pull builder image from registry
@@ -25,6 +26,6 @@ steps:
     args:
       [
         "-c",
-        "docker build --platform linux/amd64 -t ${_REPO}:latest --cache-from ${_REPO}:builder .",
+        "docker build --platform linux/amd64 -t ${_REPO}:${_TAG} --cache-from ${_REPO}:builder .",
       ]
-images: ["${_REPO}:builder", "${_REPO}:latest"]
+images: ["${_REPO}:builder", "${_REPO}:${_TAG}"]
