@@ -1,6 +1,5 @@
 node_modules
 tmp
-.env.keys
 .kilocodemodes
 .vscode
 .repo_ignore
@@ -12,3 +11,4 @@ bin/
 .task
 secret
 .env
+.env.prod
