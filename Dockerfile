@@ -9,7 +9,6 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
-  go install github.com/pressly/goose/v3/cmd/goose@latest && \
   go install github.com/a-h/templ/cmd/templ@latest
 COPY go.mod go.sum ./
 RUN go mod download
@@ -32,7 +31,6 @@ COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificat
 COPY --from=builder /server /server
 COPY --from=builder /goapp/static /static
 COPY --from=builder /goapp/sql /sql
-COPY --from=builder /go/bin/goose /goose
 
 EXPOSE 8080
 ENTRYPOINT ["/server"]

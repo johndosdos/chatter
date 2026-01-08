@@ -21,9 +21,6 @@ jobs:
       - name: Set up Goose migration tool
         run: go install github.com/pressly/goose/v3/cmd/goose@latest
 
-      - name: Build local app image
-        run: go build -o ./bin/chatter
-
       - id: "auth"
         uses: "google-github-actions/auth@v2"
         with:
@@ -47,11 +44,11 @@ jobs:
 
       - name: Deploy to Google Cloud Run
         run: gcloud run deploy chatter-server \
-          --image=asia-southeast1-docker.pkg.dev/chatter-app-483316/chatter-ar-repo/chatter-server:${{ github.sha }} \
-          --min-instances=0 \
-          --max-instances=4 \
-          --set-env-vars='NATS_URL=tls://connect.ngs.global' --set-env-vars='NATS_CRED=/secrets/nats_cred' \
-          --set-secrets=DB_URL=DB_URL:latest,JWT_SECRET=JWT_SECRET:latest,/secrets/nats_cred=nats_cred:latest \
-          --region=asia-southeast1 \
-          --project=chatter-app-483316 \
+          --image asia-southeast1-docker.pkg.dev/chatter-app-483316/chatter-ar-repo/chatter-server:${{ github.sha }} \
+          --min-instances 0 \
+          --max-instances 4 \
+          --set-env-vars 'NATS_URL=tls://connect.ngs.global' --set-env-vars='NATS_CRED=/secrets/nats_cred' \
+          --set-secrets DB_URL=DB_URL:latest,JWT_SECRET=JWT_SECRET:latest,/secrets/nats_cred=nats_cred:latest \
+          --region asia-southeast1 \
+          --project chatter-app-483316 \
           && gcloud run services update-traffic chatter-server --to-latest
