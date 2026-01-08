@@ -1,6 +1,5 @@
 node_modules
 tmp
-.env.keys
 .kilocodemodes
 .vscode
 .repo_ignore
@@ -10,4 +9,6 @@ AGENTS.md
 *_llms.md
 bin/
 .task
-.github
+secret
+.env
+.env.prod
