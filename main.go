@@ -24,7 +24,7 @@ import (
 	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
-//go:embed sql/schema/*.sql
+//go:embed sql/schema/*.sql static
 var FS embed.FS
 
 func main() {
@@ -110,8 +110,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	fs := http.FileServer(http.Dir("static"))
-	r.Handle("/static*", http.StripPrefix("/static", fs))
+	r.Handle("/static/*", http.FileServer(http.FS(FS)))
 	r.Get("/", handler.ServeRoot())
 
 	r.Route("/account", func(r chi.Router) {

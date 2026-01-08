@@ -29,8 +29,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server .
 FROM scratch AS final
 COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /server /server
-COPY --from=builder /goapp/static /static
-COPY --from=builder /goapp/sql /sql
 
 EXPOSE 8080
 ENTRYPOINT ["/server"]
