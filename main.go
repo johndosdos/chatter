@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"log"
 	"net/http"
 	"os"
@@ -13,13 +14,18 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/pressly/goose/v3"
 
 	"github.com/johndosdos/chatter/internal"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/handler"
 	ws "github.com/johndosdos/chatter/internal/websocket"
 )
+
+//go:embed sql/schema/*.sql
+var FS embed.FS
 
 func main() {
 	if os.Getenv("APP_ENV") != "production" {
@@ -87,6 +93,15 @@ func main() {
 	}
 
 	dbQueries := database.New(dbConn)
+
+	goose.SetBaseFS(FS)
+	if err := goose.SetDialect("postgres"); err != nil {
+		log.Fatalf("couldn't set db dialect: %v", err)
+	}
+	dbForGoose := stdlib.OpenDBFromPool(dbConn)
+	if err := goose.Up(dbForGoose, "sql/schema"); err != nil {
+		log.Fatalf("unable to do up migration: %v", err)
+	}
 
 	// hub.Run is our central hub that is always listening for client related events.
 	hub := ws.NewHub(dbQueries)
