@@ -1,0 +1,31 @@
+options:
+  env: ["DOCKER_BUILDKIT=1"]
+
+substitutions:
+  _REPO: asia-southeast1-docker.pkg.dev/chatter-app-483316/chatter-ar-repo/chatter-server
+  _TAG: latest
+
+steps:
+  # 1. Pull builder image from registry
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: bash
+    args: ["-c", "docker pull ${_REPO}:builder || true"]
+
+  # 2. Update builder image from cached build
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: bash
+    args:
+      [
+        "-c",
+        "docker build --platform linux/amd64 --target builder -t ${_REPO}:builder --cache-from ${_REPO}:builder .",
+      ]
+
+  # 3. Build final image from builder
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: bash
+    args:
+      [
+        "-c",
+        "docker build --platform linux/amd64 -t ${_REPO}:${_TAG} --cache-from ${_REPO}:builder .",
+      ]
+images: ["${_REPO}:builder", "${_REPO}:${_TAG}"]

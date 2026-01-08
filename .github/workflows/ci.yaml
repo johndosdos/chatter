@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+
+      - name: Format code
+        run: go fmt ./...
+
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v9.2.0
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v6.1.0
+        with:
+          go-version: "1.25.5"
+
+      - name: Run test
+        run: go test -v ./...

@@ -5,7 +5,7 @@ version: "3"
 tasks:
   up:
     cmds:
-      - dotenvx run -- docker compose -f compose.yaml -f compose.dev.yaml up
+      - docker compose -f compose.yaml -f compose.dev.yaml up
 
   down:
     cmds:
@@ -13,7 +13,7 @@ tasks:
 
   up-build:
     cmds:
-      - dotenvx run -- docker compose -f compose.yaml -f compose.dev.yaml up --build
+      - docker compose -f compose.yaml -f compose.dev.yaml up --build
 
   dev:
     cmds:

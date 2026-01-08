@@ -55,9 +55,10 @@ func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
 
 		case message := <-h.ClientMsg:
 			sanitizedMsg := h.sanitizer.Sanitize(message.Content)
+			message.Content = sanitizedMsg
 			messageParams := database.CreateMessageParams{
 				UserID:  pgtype.UUID{Bytes: [16]byte(message.UserID), Valid: true},
-				Content: sanitizedMsg,
+				Content: message.Content,
 				CreatedAt: pgtype.Timestamptz{
 					Time:             message.CreatedAt,
 					InfinityModifier: 0,
