@@ -48,11 +48,13 @@ func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan mo
 
 		err := json.Unmarshal(msg.Data(), &payload)
 		if err != nil {
-			msg.Term()
+			_ = msg.Term()
 			log.Printf("could not decode payload: %v", err)
 		}
 
-		msg.Ack()
+		if err := msg.Ack(); err != nil {
+			log.Printf("failed to acknowledge message: %+v", err)
+		}
 
 		select {
 		case receiveMsg <- payload:

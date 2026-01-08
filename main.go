@@ -74,7 +74,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to nats: %v", err)
 	}
-	defer conn.Drain()
+	defer conn.Drain() //nolint:errcheck
 
 	js, err := jetstream.New(conn)
 	if err != nil {

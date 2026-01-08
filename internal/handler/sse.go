@@ -91,14 +91,18 @@ func StreamSSE(hub *chat.Hub, db *database.Queries) http.HandlerFunc {
 				data := bytes.ReplaceAll(dataBuf.Bytes(), []byte("\n"), []byte(" "))
 
 				// fmt.Fprintf(w, "id: %v\n", message.SequenceID)
-				fmt.Fprint(w, "event: message\n")
-				fmt.Fprintf(w, "data: %s\n\n", data)
+				fmt.Fprint(w, "event: message\n")    //nolint:errcheck
+				fmt.Fprintf(w, "data: %s\n\n", data) //nolint:errcheck
 
-				rc.Flush()
+				if err := rc.Flush(); err != nil {
+					log.Printf("could not flush buffer to writer: %+v", err)
+				}
 
 			case <-ticker.C:
-				fmt.Fprint(w, ": \n\n")
-				rc.Flush()
+				fmt.Fprint(w, ": \n\n") //nolint:errcheck
+				if err := rc.Flush(); err != nil {
+					log.Printf("could not flush buffer to writer: %+v", err)
+				}
 
 			case <-ctx.Done():
 				log.Printf("%v", ctx.Err())
