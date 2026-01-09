@@ -74,7 +74,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to nats: %v", err)
 	}
-	defer conn.Drain() //nolint:errcheck
 
 	js, err := jetstream.New(conn)
 	if err != nil {
@@ -136,6 +135,14 @@ func main() {
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Println(err)
 	}
+
+	// Drain NATS connection.
+	if err := conn.Drain(); err != nil {
+		log.Printf("couldn't drain NATS conn: %+v", err)
+	}
+
+	// Close DB connection.
+	dbConn.Close()
 
 	log.Println("Server stopped")
 }
