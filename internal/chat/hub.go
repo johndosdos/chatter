@@ -71,13 +71,11 @@ func (h *Hub) Run(ctx context.Context, js jetstream.Stream) {
 				continue
 			}
 
-			_, err := broker.Publisher(ctx, h.jetstream, message)
+			err = broker.Publisher(ctx, h.jetstream, message)
 			if err != nil {
 				log.Printf("%v", err)
 				continue
 			}
-
-			// message.SequenceID = sequenceID
 
 		case payload := <-h.BrokerMsg:
 			for _, c := range h.clients {
