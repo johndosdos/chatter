@@ -3,46 +3,33 @@
 
 # Chatter
 
-Chatter is a real-time chat application built with **Go**, **HTMX**, and **WebSockets**. Users can hop in and send messages that are instantly broadcast to all connected clients.  
+Chatter is a real-time chat application. Users can hop in and send messages that are instantly broadcast to all connected clients.
 
-The app is deployed on `Render` and uses `Neon`, a serverless PostgreSQL database for message persistence.
+[Link to the app](https://chatter-server-678623746962.asia-southeast1.run.app)
 
-## Quick Start
-Access the live app [`here`](https://chat-app-wgpp.onrender.com).  
+## Why I built this
 
-## Features
-- **Real-Time Messaging**: Messages are sent and received instantly without refreshing the page.
-- **Persistent Chat History**: Messages are stored in PostgreSQL and loaded when a new user joins.
-- **Simple User Interface**: Clean, minimal UI built with Tailwind CSS.
+I use messaging apps daily and never thought about how they work internally. So I made a real-time chat app to figure it out. I started with WebSockets but switched to SSE because WebSockets were too complex for my use case. I added NATS JetStream as a message broker to ensure all server instances could handle messages to their respective clients.
 
-## Motivation
-I wanted to understand how **real-time messaging** works. The idea that people can communicate with each other anywhere in the world, in real-time, feels like magic to me. This curiousity about the technology behind that magic is what drove me to build this app.
+I kept the app simple, showing only user messages and usernames. No DMs, reactions or animations to focus on the logic behind real-time messaging.
 
-## Usage
-You’ll be prompted to enter a username when visiting for the first time. After that, you’ll join the chatroom and can start sending messages immediately.
+## Tech stack
 
-## How It Works
-1. **Frontend**:
-   Built with the Go package `a-h/templ` for server-side templating and `htmx` for dynamic UI updates. When a user sends a message, htmx sends the content through a WebSocket connection.
+- **Go** for the backend.
+- **HTMX** + **Templ** for the frontend (no framework).
+- **Tailwind CSS** for styling.
+- **Server-Sent Events (SSE)** for pushing messages to clients.
+- **PostgreSQL** for persistence (using `sqlc` for type-safe queries).
+- **NATS JetStream** as the message broker.
+- **Google Cloud Platform (GCP)** for building and deploying to the cloud.
+- **Docker** and **Docker Compose** for local container orchestration.
 
-2. **Backend**:
-   A Go server manages WebSocket connections. Each client is registered with a central *hub*.
+## How it works
 
-3. **WebSocket Communication**:
-   The hub broadcasts messages to all connected clients, sanitizes them to prevent XSS attacks, and saves them to the Neon database.
+Clients request an open connection via GET through the `/stream` (SSE) endpoint —> messages are sent via POST —> saved to the database —> published to NATS —> pushed to all connected clients via SSE.
 
-4. **Database**:
-   A serverless PostgreSQL instance on Neon stores all messages, providing persistent chat history.
+NATS handles the pub/sub part so multiple server instances could theoretically run without clients missing messages.
 
-## Technologies Used
-- **Backend**: [`Go`](https://go.dev/)
-- **Frontend**: [`templ`](https://github.com/a-h/templ), [`htmx`](https://htmx.org/), [`Tailwind CSS`](https://tailwindcss.com/)
-- **Real-Time Communication**: WebSockets ([`gorilla/websocket`](https://github.com/gorilla/websocket))
-- **Database**: PostgreSQL with [`sqlc`](https://sqlc.dev/) for type-safe query generation
-- **HTML Sanitizer**: [`bluemonday`](https://github.com/microcosm-cc/bluemonday)
-- **Deployment**:
-  - Hosted on [`Render`](https://render.com/)
-  - Database on [`Neon`](https://neon.com/)
- 
-## Contributing
-Thank you! Feel free to issue a pull request or raise an issue.
+## Running it locally
+
+During development, I used Docker and Compose to spin up and orchestrate the server, DB, and broker containers. I've set up a Taskfile.yaml to run dev tasks. Feel free to take a look around!
