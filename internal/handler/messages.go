@@ -2,13 +2,10 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/a-h/templ"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/model"
@@ -33,16 +30,18 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		since := r.URL.Query().Get("since")
-
-		dbMessageList, err := filterMessages(ctx, since, db)
+		// Fetch latest 50 messages
+		dbMessageList, err := db.ListMessages(ctx, 50)
 		if err != nil {
 			log.Printf("handler/messages: %v", err)
 			return
 		}
 
 		var prevMsg model.Message
-		for _, msg := range dbMessageList {
+
+		// Iterate in reverse to show oldest messages first (chronological order)
+		for i := len(dbMessageList) - 1; i >= 0; i-- {
+			msg := dbMessageList[i]
 			message := model.Message{
 				UserID:    msg.UserID.Bytes,
 				Username:  msg.Username,
@@ -73,28 +72,4 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			prevMsg = message
 		}
 	}
-}
-
-func filterMessages(ctx context.Context, since string, db *database.Queries) ([]database.ListMessagesRow, error) {
-	var dbMessageList []database.ListMessagesRow
-	var err error
-
-	if since != "" {
-		t, err := time.Parse(time.RFC3339Nano, since)
-		if err != nil {
-			return nil, fmt.Errorf("handler/messages: failed to parse time in specified format: %w", err)
-		}
-
-		dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: t, Valid: true})
-		if err != nil {
-			return nil, fmt.Errorf("handler/messages: failed to load messages from database: %w", err)
-		}
-	} else {
-		dbMessageList, err = db.ListMessages(ctx, pgtype.Timestamptz{Time: time.Time{}, Valid: false})
-		if err != nil {
-			return nil, fmt.Errorf("handler/messages: failed to load messages from database: %w", err)
-		}
-	}
-
-	return dbMessageList, nil
 }

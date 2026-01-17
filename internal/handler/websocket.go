@@ -39,11 +39,17 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 		c := ws.NewClient(conn)
 		c.UserID = user.UserID.Bytes
 		c.Username = user.Username
+		c.Hub = h // Explicitly set Hub since NewClient no longer takes it
 
-		h.Register <- c
-		// Ok is a signalling channel from our hub, indicating if register was
-		// successful.
-		<-h.Ok
+		reg := ws.Registration{
+			Client: c,
+			Done:   make(chan struct{}),
+		}
+
+		h.Register <- reg
+
+		// Wait for registration to complete
+		<-reg.Done
 
 		// Run these goroutines to listen and process messages from other
 		// clients.

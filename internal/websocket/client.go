@@ -15,11 +15,11 @@ import (
 
 // Client contains client connection information.
 type Client struct {
-	UserID   uuid.UUID
-	Username string
-	conn     *websocket.Conn
-	Hub      *Hub
-	FromHub  chan model.Message
+	UserID    uuid.UUID
+	Username  string
+	conn      *websocket.Conn
+	Hub       *Hub
+	MessageCh chan model.Message
 }
 
 const pongWait = 60 * time.Second
@@ -27,8 +27,8 @@ const pongWait = 60 * time.Second
 // NewClient returns a new instance of Client.
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		conn:    conn,
-		FromHub: make(chan model.Message, 64),
+		conn:      conn,
+		MessageCh: make(chan model.Message, 64),
 	}
 }
 
@@ -43,7 +43,7 @@ func (c *Client) WriteMessage() {
 	var prevMsg model.Message
 	for {
 		select {
-		case message, ok := <-c.FromHub:
+		case message, ok := <-c.MessageCh:
 			// Stop the process if the recv channel closed.
 			if !ok {
 				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
@@ -138,6 +138,6 @@ func (c *Client) ReadMessage() {
 			continue
 		}
 
-		c.Hub.fromClient <- payload
+		c.Hub.ClientMsg <- payload
 	}
 }

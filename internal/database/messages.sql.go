@@ -34,11 +34,8 @@ const listMessages = `-- name: ListMessages :many
 SELECT m.user_id, m.content, m.created_at, u.username
 FROM messages m
 JOIN users u ON m.user_id = u.user_id
-WHERE (
-  $1::TIMESTAMPTZ IS NULL OR m.created_at > $1::TIMESTAMPTZ
-)
-ORDER BY m.created_at ASC
-LIMIT 50
+ORDER BY created_at DESC
+LIMIT $1
 `
 
 type ListMessagesRow struct {
@@ -48,8 +45,8 @@ type ListMessagesRow struct {
 	Username  string
 }
 
-func (q *Queries) ListMessages(ctx context.Context, since pgtype.Timestamptz) ([]ListMessagesRow, error) {
-	rows, err := q.db.Query(ctx, listMessages, since)
+func (q *Queries) ListMessages(ctx context.Context, limit int32) ([]ListMessagesRow, error) {
+	rows, err := q.db.Query(ctx, listMessages, limit)
 	if err != nil {
 		return nil, err
 	}

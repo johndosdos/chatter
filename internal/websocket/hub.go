@@ -18,33 +18,43 @@ type sanitizer interface {
 	SanitizeBytes(p []byte) []byte
 }
 
+type Registration struct {
+	Client *Client
+	Done   chan struct{}
+}
+
 // Hub contains functions needed for thee app state management.
 type Hub struct {
 	db         *database.Queries
 	jetstream  jetstream.JetStream
 	clients    map[uuid.UUID]*Client
-	Register   chan *Client
+	Register   chan Registration
 	Unregister chan *Client
-	fromClient chan model.Message
-	FromWorker chan model.Message
+	ClientMsg  chan model.Message
+	BrokerMsg  chan model.Message
 	sanitizer  sanitizer
-	Ok         chan bool
 }
 
 // Run manages incoming and outgoing hub traffic.
-func (h *Hub) Run(ctx context.Context) {
+func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
+	err := broker.Subscriber(ctx, stream, h.BrokerMsg)
+	if err != nil {
+		log.Printf("websocket/hub: failed to subscribe to broker: %v", err)
+	}
+
 	for {
 		select {
-		case client := <-h.Register:
+		case reg := <-h.Register:
+			client := reg.Client
 			h.clients[client.UserID] = client
 			client.Hub = h
-			h.Ok <- true
+			close(reg.Done)
 
 		case client := <-h.Unregister:
 			delete(h.clients, client.UserID)
-			close(client.FromHub)
+			close(client.MessageCh)
 
-		case payload := <-h.fromClient:
+		case payload := <-h.ClientMsg:
 			// We need to sanitize incoming messages to prevent XSS.
 			sanitized := h.sanitizer.Sanitize(payload.Content)
 			payload.Content = sanitized
@@ -71,9 +81,13 @@ func (h *Hub) Run(ctx context.Context) {
 				continue
 			}
 
-		case payload := <-h.FromWorker:
+		case payload := <-h.BrokerMsg:
 			for _, client := range h.clients {
-				client.FromHub <- payload
+				select {
+				case client.MessageCh <- payload:
+				default:
+					log.Println("skipping message payload - channel full or client slow")
+				}
 			}
 
 		case <-ctx.Done():
@@ -89,11 +103,10 @@ func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
 		db:         db,
 		jetstream:  js,
 		clients:    make(map[uuid.UUID]*Client),
-		Register:   make(chan *Client),
+		Register:   make(chan Registration),
 		Unregister: make(chan *Client),
-		fromClient: make(chan model.Message, 1024),
-		FromWorker: make(chan model.Message, 1024),
+		ClientMsg:  make(chan model.Message, 1024),
+		BrokerMsg:  make(chan model.Message, 1024),
 		sanitizer:  bluemonday.StrictPolicy(),
-		Ok:         make(chan bool, 64),
 	}
 }

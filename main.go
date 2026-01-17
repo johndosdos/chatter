@@ -102,12 +102,7 @@ func main() {
 
 	// hub.Run is our central hub that is always listening for client related events.
 	hub := ws.NewHub(js, dbQueries)
-	go hub.Run(ctx)
-
-	err = broker.Subscriber(ctx, stream, hub.FromWorker)
-	if err != nil {
-		log.Printf("broker subscriber error: %v", err)
-	}
+	go hub.Run(ctx, stream)
 
 	mux := http.NewServeMux()
 	fs := http.FileServer(http.Dir("static"))
