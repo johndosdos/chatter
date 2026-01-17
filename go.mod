@@ -9,7 +9,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/joho/godotenv v1.5.1
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nats-io/nats.go v1.47.0
 )
