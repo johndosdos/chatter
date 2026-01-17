@@ -17,7 +17,6 @@ import (
 
 	"github.com/johndosdos/chatter/internal"
 	"github.com/johndosdos/chatter/internal/broker"
-	"github.com/johndosdos/chatter/internal/broker/worker"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/handler"
 	ws "github.com/johndosdos/chatter/internal/websocket"
@@ -105,7 +104,7 @@ func main() {
 	hub := ws.NewHub(js, dbQueries)
 	go hub.Run(ctx)
 
-	err = broker.Subscriber(ctx, stream, worker.WorkerHub(hub))
+	err = broker.Subscriber(ctx, stream, hub.FromWorker)
 	if err != nil {
 		log.Printf("broker subscriber error: %v", err)
 	}

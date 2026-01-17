@@ -38,12 +38,12 @@ func Publisher(ctx context.Context, js jetstream.JetStream, payload model.Messag
 	return nil
 }
 
-func Subscriber(ctx context.Context, stream jetstream.Stream, handler func(model.Message)) error {
+func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan model.Message) error {
 	consumer, err := stream.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{
-		Durable:    "chat_consumer", // Persistent consumer
+		Durable:    "chat_consumer",
 		AckPolicy:  jetstream.AckExplicitPolicy,
-		AckWait:    30 * time.Second, // Time to wait before redelivery
-		MaxDeliver: 3,                // Max retry attempts
+		AckWait:    30 * time.Second,
+		MaxDeliver: 3,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create or update consumer: %w", err)
@@ -62,10 +62,13 @@ func Subscriber(ctx context.Context, stream jetstream.Stream, handler func(model
 			return
 		}
 
-		handler(payload)
-
-		if err := msg.Ack(); err != nil {
-			log.Printf("failed to acknowledge message: %+v", err)
+		select {
+		case receiveMsg <- payload:
+			if err := msg.Ack(); err != nil {
+				log.Printf("failed to acknowledge message: %+v", err)
+			}
+		default:
+			log.Println("skipping message payload - channel full")
 		}
 	}
 
