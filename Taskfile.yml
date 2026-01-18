@@ -2,12 +2,10 @@
 
 version: "3"
 
-dotenv: [".env.development"]
-
 tasks:
   up:
     cmds:
-      - docker compose -f compose.yaml -f compose.dev.yaml up
+      - docker compose --env-file ./.env -f compose.yaml -f compose.dev.yaml up
 
   down:
     cmds:
@@ -15,7 +13,7 @@ tasks:
 
   up-build:
     cmds:
-      - docker compose -f compose.yaml -f compose.dev.yaml up --build
+      - docker compose --env-file ./.env -f compose.yaml -f compose.dev.yaml up --build
 
   dev:
     cmds:
