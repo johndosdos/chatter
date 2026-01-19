@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/nats-io/nats.go"
@@ -39,18 +41,7 @@ func main() {
 		port = "8080"
 	}
 
-	server := &http.Server{
-		Addr:              "0.0.0.0:" + port,
-		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       15 * time.Second,
-		WriteTimeout:      15 * time.Second,
-		IdleTimeout:       30 * time.Second,
-	}
-
 	// Init NATS
-	log.Println("Starting application...")
-	log.Println("Initializing NATS connection...")
-
 	var natsCredentials []nats.Option
 
 	natsURL := os.Getenv("NATS_URL")
@@ -86,8 +77,6 @@ func main() {
 	}
 
 	// Init DB
-	log.Println("Initializing Database connection...")
-
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL environment variable is not set")
@@ -104,21 +93,38 @@ func main() {
 	hub := ws.NewHub(js, dbQueries)
 	go hub.Run(ctx, stream)
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+
 	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-	mux.Handle("/account/login", handler.ServeLogin(dbQueries))
-	mux.Handle("/account/signup", handler.ServeSignup(dbQueries))
-	mux.Handle("/account/logout", handler.ServeLogout(dbQueries))
+	r.Handle("/static*", http.StripPrefix("/static", fs))
+	r.Get("/", handler.ServeRoot())
 
-	// Load chat history on HTTP GET on initial connection before starting websockets.
-	mux.Handle("/messages", internal.Middleware(handler.ServeMessages(dbQueries), dbQueries))
-	mux.Handle("/ws", internal.Middleware(handler.ServeWs(hub, dbQueries), dbQueries))
-	mux.Handle("/chat", internal.Middleware(handler.ServeChat(), dbQueries))
+	r.Route("/account", func(r chi.Router) {
+		r.Get("/login", handler.ServeLoginPage())
+		r.Post("/login", handler.SubmitLoginForm(dbQueries))
 
-	mux.Handle("/", handler.ServeRoot())
+		r.Get("/signup", handler.ServeSignupPage())
+		r.Post("/signup", handler.SubmitSignupForm(dbQueries))
 
-	server.Handler = mux
+		r.Post("/logout", handler.SubmitLogoutReq(dbQueries))
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(internal.Middleware(dbQueries))
+		r.Get("/messages", handler.ServeMessages(dbQueries))
+		r.Get("/ws", handler.ServeWs(hub, dbQueries))
+		r.Get("/chat", handler.ServeChat())
+	})
+
+	server := &http.Server{
+		Addr:              "0.0.0.0:" + port,
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       30 * time.Second,
+	}
 
 	go func() {
 		log.Printf("Server starting at 0.0.0.0:%s", port)

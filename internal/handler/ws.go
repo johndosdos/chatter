@@ -36,11 +36,7 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
 
 		// We'll register our new client to the central hub.
-		c := ws.NewClient(conn)
-		c.UserID = user.UserID.Bytes
-		c.Username = user.Username
-		c.Hub = h // Explicitly set Hub since NewClient no longer takes it
-
+		c := ws.NewClient(conn, user.UserID.Bytes, user.Username)
 		reg := ws.Registration{
 			Client: c,
 			Done:   make(chan struct{}),

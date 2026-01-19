@@ -36,7 +36,7 @@ tasks:
   server:
     cmds:
       - golangci-lint && govulncheck
-      - "wgo -file .templ -xfile ._templ.go -file .go go build -o ./bin/ ./main.go :: ./bin/main"
+      - "pnpm run watch:css & wgo -file .templ -xfile ._templ.go -file .go templ generate :: go run ./main.go"
 
   templ:
     cmds:

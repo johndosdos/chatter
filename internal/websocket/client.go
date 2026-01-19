@@ -25,10 +25,12 @@ type Client struct {
 const pongWait = 60 * time.Second
 
 // NewClient returns a new instance of Client.
-func NewClient(conn *websocket.Conn) *Client {
+func NewClient(conn *websocket.Conn, userID uuid.UUID, username string) *Client {
 	return &Client{
 		conn:      conn,
 		MessageCh: make(chan model.Message, 64),
+		UserID:    userID,
+		Username:  username,
 	}
 }
 

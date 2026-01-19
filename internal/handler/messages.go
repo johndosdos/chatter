@@ -19,10 +19,6 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		if r.Method != http.MethodGet {
-			return
-		}
-
 		// Parse JWT and get UserID.
 		userID, err := auth.GetUserFromContext(ctx)
 		if err != nil {

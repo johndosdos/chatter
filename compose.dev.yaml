@@ -7,7 +7,7 @@ services:
     command: >
       /bin/sh -c
       "pnpm run watch:css &
-      wgo -file .templ -xfile ._templ.go templ generate ::
+      wgo -file .templ -xfile ._templ.go -file .go templ generate ::
       go run ./main.go"
     volumes:
       - .:/goapp
