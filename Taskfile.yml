@@ -2,18 +2,29 @@
 
 version: "3"
 
+dotenv:
+  - .env
+
 tasks:
-  up:
+  compose::up:
     cmds:
       - docker compose --env-file ./.env -f compose.yaml -f compose.dev.yaml up
 
-  down:
+  compose::down:
     cmds:
       - docker compose -f compose.yaml -f compose.dev.yaml down
 
-  up-build:
+  compose::up-build:
     cmds:
       - docker compose --env-file ./.env -f compose.yaml -f compose.dev.yaml up --build
+
+  db::up:
+    cmds:
+      - goose up
+
+  db::reset:
+    cmds:
+      - goose reset
 
   dev:
     cmds:

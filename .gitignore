@@ -11,3 +11,4 @@ bin/
 .task
 secret
 .env.prod
+.env.previous
