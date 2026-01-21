@@ -55,10 +55,10 @@ templ ChatInput() {
 			<form
 				id="form"
 				class="flex-1 flex items-center gap-2"
-				hx-post="/send"
+				ws-send
+				hx-trigger="submit"
 				hx-target="#message-area"
 				hx-swap="beforeend"
-				hx-trigger="submit"
 				hx-include="[name='content']"
 				hx-on::config-request="if (this.elements.content.value.trim() === '') event.preventDefault()"
 				hx-on::after-request="this.reset()"
