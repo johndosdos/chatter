@@ -2,13 +2,12 @@ package websocket
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/a-h/templ"
+	"github.com/coder/websocket"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	components "github.com/johndosdos/chatter/components/chat"
 	"github.com/johndosdos/chatter/internal/model"
 )
@@ -19,43 +18,39 @@ type Client struct {
 	Username  string
 	conn      *websocket.Conn
 	Hub       *Hub
-	MessageCh chan model.Message
+	MessageCh chan model.ChatMessage
 }
-
-const pongWait = 60 * time.Second
 
 // NewClient returns a new instance of Client.
 func NewClient(conn *websocket.Conn, userID uuid.UUID, username string) *Client {
 	return &Client{
 		conn:      conn,
-		MessageCh: make(chan model.Message, 64),
+		MessageCh: make(chan model.ChatMessage, 64),
 		UserID:    userID,
 		Username:  username,
 	}
 }
 
 // WriteMessage writes and renders to the outgoing websocket stream.
-func (c *Client) WriteMessage() {
-	t := time.NewTicker((pongWait * 9) / 10)
-	defer t.Stop()
-
+func (c *Client) WriteMessage(ctx context.Context) {
 	// In order to group messages by sender, we need to reference the
 	// previous message. We can achieve this by setting the current
 	// message as the previous after processing.
-	var prevMsg model.Message
+	var prevMsg model.ChatMessage
 	for {
 		select {
 		case message, ok := <-c.MessageCh:
 			// Stop the process if the recv channel closed.
 			if !ok {
-				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.conn.Close(websocket.StatusNormalClosure, "channel closed")
 				return
 			}
 
-			// Invoke a new writer from the current connection.
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			writeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			w, err := c.conn.Writer(writeCtx, websocket.MessageText)
 			if err != nil {
-				log.Printf("websocket/client/write: %v", err)
+				cancel()
+				log.Printf("%+v", err)
 				return
 			}
 
@@ -68,78 +63,25 @@ func (c *Client) WriteMessage() {
 			// Render message as sender or receiver.
 			var content templ.Component
 			if message.UserID == c.UserID {
-				content = components.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = components.SenderBubble(message.Username, message.Content, sameUser, message.ID)
 			} else {
-				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.ID)
 			}
 			if err := content.Render(context.Background(), w); err != nil {
-				log.Printf("websocket/client/write: failed to render component: %v", err)
+				log.Printf("failed to render component: %v", err)
+				cancel()
 				return
 			}
 
-			if err := w.Close(); err != nil {
-				log.Printf("websocket/client/write: failed to close connection: %v", err)
-				return
+			if err = w.Close(); err != nil {
+				log.Printf("failed to close websocket writer: %+v", err)
 			}
-
+			cancel()
 			prevMsg = message
 
-		case <-t.C:
-			err := c.conn.WriteMessage(websocket.PingMessage, nil)
-			if err != nil {
-				log.Printf("websocket/client/write: failed to send ping signal: %v", err)
-				return
-			}
+		case <-ctx.Done():
+			c.conn.Close(websocket.StatusGoingAway, "context cancelled")
+			return
 		}
-	}
-}
-
-// ReadMessage reads the incoming data from the websocket stream.
-func (c *Client) ReadMessage() {
-	defer func() {
-		c.Hub.Unregister <- c
-		_ = c.conn.Close()
-	}()
-
-	// The default connection behavior is to wait indefinitely for incoming data.
-	// Firewalls, proxies, and other services have their own system to invalidate
-	// a stale connection. Therefore, we must keep the connection alive by sending
-	// ping pong signals between the server and the client (to simulate network traffic)
-	// within a set deadline.
-	err := c.conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
-	if err != nil {
-		log.Printf("websocket/client/read: failed to set read deadline: %v", err)
-		return
-	}
-
-	// Reset deadline after receiving pong signal.
-	c.conn.SetPongHandler(func(_ string) error {
-		return c.conn.SetReadDeadline(time.Now().UTC().Add(pongWait))
-	})
-
-	for {
-		_, p, err := c.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Printf("websocket/client/read: %v", err)
-			}
-			break
-		}
-
-		// We need to unmarshal the JSON sent from the client side. HTMX's ws-send
-		// attribute will also send a HEADERS field along with the client message.
-		// Also, set CreatedAt to the current time.
-		payload := model.Message{
-			UserID:    c.UserID,
-			Username:  c.Username,
-			CreatedAt: time.Now().UTC(),
-		}
-		err = json.Unmarshal(p, &payload)
-		if err != nil {
-			log.Printf("websocket/client/read: failed to process payload from client: %v", err)
-			continue
-		}
-
-		c.Hub.ClientMsg <- payload
 	}
 }

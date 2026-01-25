@@ -653,6 +653,16 @@
     }
   }
 }
+@layer base {
+  html {
+    font-size: 87.5%;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 100%;
+    }
+  }
+}
 @property --tw-space-y-reverse {
   syntax: "*";
   inherits: false;

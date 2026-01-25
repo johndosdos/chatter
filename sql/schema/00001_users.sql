@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE users (
     user_id UUID NOT NULL PRIMARY KEY,
-    username TEXT NOT NULL,
+    username TEXT UNIQUE NOT NULL,
     email VARCHAR UNIQUE NOT NULL
 );
 

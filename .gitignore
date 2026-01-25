@@ -13,3 +13,4 @@ secret
 .env.prod
 .env.previous
 conversation_context.json
+temp

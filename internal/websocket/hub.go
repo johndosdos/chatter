@@ -30,8 +30,8 @@ type Hub struct {
 	clients    map[uuid.UUID]*Client
 	Register   chan Registration
 	Unregister chan *Client
-	ClientMsg  chan model.Message
-	BrokerMsg  chan model.Message
+	ClientMsg  chan model.ChatMessage
+	BrokerMsg  chan model.ChatMessage
 	sanitizer  sanitizer
 }
 
@@ -39,7 +39,7 @@ type Hub struct {
 func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 	err := broker.Subscriber(ctx, stream, h.BrokerMsg)
 	if err != nil {
-		log.Printf("websocket/hub: failed to subscribe to broker: %v", err)
+		log.Printf("failed to subscribe to broker: %v", err)
 	}
 
 	for {
@@ -69,15 +69,22 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 				},
 			}
 
-			_, err := h.db.CreateMessage(ctx, message)
+			// We persist the message to DB. Note: DB generates the ID.
+			// The ID in payload is currently 0 or temp, but for broadcast we might want real ID?
+			// Ideally we get the ID back from DB and update payload before broadcasting.
+			createdMsg, err := h.db.CreateMessage(ctx, message)
 			if err != nil {
-				log.Printf("worker/database: failed to store payload to database: %v", err)
+				log.Printf("failed to store payload to database: %v", err)
 				continue
 			}
 
+			// Update payload with DB-generated ID and created_at
+			payload.ID = createdMsg.ID
+			payload.CreatedAt = createdMsg.CreatedAt.Time
+
 			err = broker.Publisher(ctx, h.jetstream, payload)
 			if err != nil {
-				log.Printf("worker/database: %v", err)
+				log.Printf("%v", err)
 				continue
 			}
 
@@ -91,7 +98,7 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 			}
 
 		case <-ctx.Done():
-			log.Printf("websocket/hub: context cancelled: %v", ctx.Err())
+			log.Printf("context cancelled: %v", ctx.Err())
 			return
 		}
 	}
@@ -105,8 +112,8 @@ func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
 		clients:    make(map[uuid.UUID]*Client),
 		Register:   make(chan Registration),
 		Unregister: make(chan *Client),
-		ClientMsg:  make(chan model.Message, 1024),
-		BrokerMsg:  make(chan model.Message, 1024),
+		ClientMsg:  make(chan model.ChatMessage, 1024),
+		BrokerMsg:  make(chan model.ChatMessage, 1024),
 		sanitizer:  bluemonday.StrictPolicy(),
 	}
 }

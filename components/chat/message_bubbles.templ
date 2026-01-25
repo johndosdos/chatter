@@ -1,12 +1,10 @@
 package chat
 
-import "time"
-
-templ ReceiverBubble(username, content string, sameUser bool, createdAt time.Time) {
+templ ReceiverBubble(username, content string, sameUser bool, messageID int64) {
 	<div
 		hx-swap-oob="beforeend:#message-area"
 	>
-		<div data-timestamp={ createdAt.Format(time.RFC3339Nano) } class="flex flex-col items-start">
+		<div data-messageID={ messageID } class="flex flex-col items-start">
 			if sameUser {
 				<div class="bg-zinc-800 text-gray-200 p-3 rounded-2xl max-w-[80%] shadow-lg">
 					<p>{ content }</p>
@@ -21,11 +19,11 @@ templ ReceiverBubble(username, content string, sameUser bool, createdAt time.Tim
 	</div>
 }
 
-templ SenderBubble(username, content string, sameUser bool, createdAt time.Time) {
+templ SenderBubble(username, content string, sameUser bool, messageID int64) {
 	<div
 		hx-swap-oob="beforeend:#message-area"
 	>
-		<div data-timestamp={ createdAt.Format(time.RFC3339Nano) } class="flex flex-col items-end">
+		<div data-messageID={ messageID } class="flex flex-col items-end">
 			if sameUser {
 				<div class="bg-zinc-600 text-white p-3 rounded-2xl max-w-[80%] shadow-lg">
 					<p>{ content }</p>

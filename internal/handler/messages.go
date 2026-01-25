@@ -8,7 +8,6 @@ import (
 	"github.com/a-h/templ"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
-	"github.com/johndosdos/chatter/internal/model"
 
 	viewChat "github.com/johndosdos/chatter/components/chat"
 )
@@ -22,28 +21,22 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 		// Parse JWT and get UserID.
 		userID, err := auth.GetUserFromContext(ctx)
 		if err != nil {
-			log.Printf("handler/messages: %v", err)
+			log.Printf("%v", err)
 			return
 		}
 
 		// Fetch latest 50 messages
 		dbMessageList, err := db.ListMessages(ctx, 50)
 		if err != nil {
-			log.Printf("handler/messages: %v", err)
+			log.Printf("%v", err)
 			return
 		}
 
-		var prevMsg model.Message
+		var prevMsg database.ListMessagesRow
 
 		// Iterate in reverse to show oldest messages first (chronological order)
 		for i := len(dbMessageList) - 1; i >= 0; i-- {
-			msg := dbMessageList[i]
-			message := model.Message{
-				UserID:    msg.UserID.Bytes,
-				Username:  msg.Username,
-				Content:   msg.Content,
-				CreatedAt: msg.CreatedAt.Time,
-			}
+			message := dbMessageList[i]
 
 			// Check if current and previous messages have the same UserID.
 			sameUser := false
@@ -55,13 +48,13 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 
 			// Render message as sender or receiver.
 			var content templ.Component
-			if message.UserID == userID {
-				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+			if message.UserID.Bytes == userID {
+				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.ID)
 			} else {
-				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.ID)
 			}
 			if err := content.Render(context.Background(), w); err != nil {
-				log.Printf("handler/messages: failed to render component: %v", err)
+				log.Printf("failed to render component: %v", err)
 				return
 			}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-func Publisher(ctx context.Context, js jetstream.JetStream, payload model.Message) error {
+func Publisher(ctx context.Context, js jetstream.JetStream, payload model.ChatMessage) error {
 	if js == nil {
 		return fmt.Errorf("jetstream interface is nil")
 	}
@@ -38,7 +38,7 @@ func Publisher(ctx context.Context, js jetstream.JetStream, payload model.Messag
 	return nil
 }
 
-func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan model.Message) error {
+func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan model.ChatMessage) error {
 	consumer, err := stream.CreateOrUpdateConsumer(ctx, jetstream.ConsumerConfig{
 		Durable:    "chat_consumer",
 		AckPolicy:  jetstream.AckExplicitPolicy,
@@ -50,7 +50,7 @@ func Subscriber(ctx context.Context, stream jetstream.Stream, receiveMsg chan mo
 	}
 
 	consumeHandler := func(msg jetstream.Msg) {
-		var payload model.Message
+		var payload model.ChatMessage
 
 		err := json.Unmarshal(msg.Data(), &payload)
 		if err != nil {

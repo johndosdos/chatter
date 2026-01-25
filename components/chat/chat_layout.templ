@@ -27,14 +27,14 @@ templ ChatLayout() {
           }
 
           let lastMsg = messageArea?.lastElementChild;
-          let since = lastMsg?.dataset.timestamp;
+          let messageID = lastMsg?.dataset.messageID;
 
-          if (!since) {
+          if (!messageID) {
             return
           }
 
           let url = new URL("/messages", window.location.origin);
-          url.searchParams.set("since", since);
+          url.searchParams.set("messageID", messageID);
 
           htmx.ajax("GET", url.toString(), { target: "#message-area", swap: "beforeend" });
         });

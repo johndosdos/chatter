@@ -4,8 +4,8 @@ VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: ListMessages :many
-SELECT m.*, u.username
+SELECT m.id, m.user_id, m.content, m.created_at, u.username
 FROM messages m
 JOIN users u ON m.user_id = u.user_id
-ORDER BY created_at DESC
+ORDER BY m.created_at DESC
 LIMIT $1;
