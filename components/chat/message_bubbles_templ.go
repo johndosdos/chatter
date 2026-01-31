@@ -234,7 +234,7 @@ func MessageArea() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" hx-trigger=\"load\" hx-swap=\"beforeend\" class=\"flex-1 p-4 overflow-y-auto space-y-1 pt-8 pb-24\"></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" hx-trigger=\"load\" hx-swap=\"beforeend\" class=\"flex-1 p-4 overflow-y-auto space-y-1 pt-4 pb-24\"></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

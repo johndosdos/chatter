@@ -8,7 +8,7 @@ package chat
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func ChatInput() templ.Component {
+func TypingIndicator(username string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -29,7 +29,20 @@ func ChatInput() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"p-4 py-8 sticky bottom-0 left-0 right-0 relative\"><div id=\"typing-indicator\" class=\"hidden absolute -top-6 left-6 text-sm text-gray-400 z-50 pointer-events-none\"></div><form id=\"form\" class=\"flex w-full items-center gap-2\"><input type=\"text\" name=\"content\" id=\"user-input\" class=\"flex-1 px-4 py-2 mr-2 text-base rounded-full border-transparent bg-zinc-800 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500\" placeholder=\"Type a message...\" hx-trigger=\"input changed throttle:2000ms\" hx-vals='{\"content\": \"\"}' ws-send> <button type=\"submit\" id=\"send-button\" class=\"bg-zinc-700 text-white px-5 py-2 rounded-full font-semibold shadow-md hover:bg-blue-600 active:bg-blue-800 transition-all duration-200\" hx-trigger=\"click\" hx-include=\"[name='content']\" hx-on::ws-before-send=\"if (document.getElementById('user-input').value.trim() === '') event.preventDefault()\" hx-on::ws-after-send=\"document.getElementById('user-input').value = ''\" ws-send>Send</button></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div hx-swap-oob=\"innerHTML:#typing-indicator\"><span class=\"text-xs text-gray-400 italic animate-pulse\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(username)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/chat/typing_indicator.templ`, Line: 6, Col: 13}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " is typing...</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

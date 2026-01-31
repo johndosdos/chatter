@@ -1,0 +1,9 @@
+package chat
+
+templ TypingIndicator(username string) {
+	<div hx-swap-oob="innerHTML:#typing-indicator">
+		<span class="text-xs text-gray-400 italic animate-pulse">
+			{ username } is typing...
+		</span>
+	</div>
+}

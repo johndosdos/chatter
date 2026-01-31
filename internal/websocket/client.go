@@ -3,16 +3,17 @@ package websocket
 import (
 	"context"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/a-h/templ"
 	"github.com/coder/websocket"
 	"github.com/google/uuid"
+	"github.com/johndosdos/chatter/components/chat"
 	components "github.com/johndosdos/chatter/components/chat"
 	"github.com/johndosdos/chatter/internal/model"
 )
 
-// Client contains client connection information.
 type Client struct {
 	UserID    uuid.UUID
 	Username  string
@@ -21,7 +22,6 @@ type Client struct {
 	MessageCh chan model.ChatMessage
 }
 
-// NewClient returns a new instance of Client.
 func NewClient(conn *websocket.Conn, userID uuid.UUID, username string) *Client {
 	return &Client{
 		conn:      conn,
@@ -39,45 +39,61 @@ func (c *Client) WriteMessage(ctx context.Context) {
 	var prevMsg model.ChatMessage
 	for {
 		select {
-		case message, ok := <-c.MessageCh:
-			// Stop the process if the recv channel closed.
+		case payload, ok := <-c.MessageCh:
+			// We don't want to continue processing when the channel has already been
+			// closed.
 			if !ok {
 				c.conn.Close(websocket.StatusNormalClosure, "channel closed")
 				return
 			}
 
-			writeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			sameUser := payload.UserID == prevMsg.UserID
+
+			var content templ.Component
+			switch payload.Type {
+			case "typing":
+				if payload.UserID == c.UserID {
+					continue
+				}
+				content = chat.TypingIndicator(payload.Username)
+
+			case "presenceCount":
+				// We expect a string that contain the count of currently connected users.
+				s, err := strconv.Atoi(payload.Content)
+				if err != nil {
+					log.Printf("failed to convert string to int: %+v", err)
+					continue
+				}
+				content = chat.PresenceCount(s)
+
+			case "message":
+				if payload.UserID == c.UserID {
+					content = components.SenderBubble(payload.Username, payload.Content, sameUser, payload.ID)
+				} else {
+					content = components.ReceiverBubble(payload.Username, payload.Content, sameUser, payload.ID)
+				}
+			}
+
+			writeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			w, err := c.conn.Writer(writeCtx, websocket.MessageText)
 			if err != nil {
-				cancel()
 				log.Printf("%+v", err)
-				return
+				cancel()
+				continue
 			}
 
-			// Check if current and previous messages have the same userid.
-			sameUser := false
-			if message.UserID == prevMsg.UserID {
-				sameUser = true
-			}
-
-			// Render message as sender or receiver.
-			var content templ.Component
-			if message.UserID == c.UserID {
-				content = components.SenderBubble(message.Username, message.Content, sameUser, message.ID)
-			} else {
-				content = components.ReceiverBubble(message.Username, message.Content, sameUser, message.ID)
-			}
 			if err := content.Render(context.Background(), w); err != nil {
 				log.Printf("failed to render component: %v", err)
+				w.Close()
 				cancel()
-				return
+				continue
 			}
 
-			if err = w.Close(); err != nil {
-				log.Printf("failed to close websocket writer: %+v", err)
-			}
+			w.Close()
 			cancel()
-			prevMsg = message
+
+			// Only update prevMsg for regular messages, not typing indicators.
+			prevMsg = payload
 
 		case <-ctx.Done():
 			c.conn.Close(websocket.StatusGoingAway, "context cancelled")

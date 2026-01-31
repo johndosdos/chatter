@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"log"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -23,7 +24,6 @@ type Registration struct {
 	Done   chan struct{}
 }
 
-// Hub contains functions needed for thee app state management.
 type Hub struct {
 	db         *database.Queries
 	jetstream  jetstream.JetStream
@@ -35,7 +35,6 @@ type Hub struct {
 	sanitizer  sanitizer
 }
 
-// Run manages incoming and outgoing hub traffic.
 func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 	err := broker.Subscriber(ctx, stream, h.BrokerMsg)
 	if err != nil {
@@ -48,16 +47,27 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 			client := reg.Client
 			h.clients[client.UserID] = client
 			client.Hub = h
+			h.connectedUsers()
 			close(reg.Done)
 
 		case client := <-h.Unregister:
 			delete(h.clients, client.UserID)
+			h.connectedUsers()
 			close(client.MessageCh)
 
 		case payload := <-h.ClientMsg:
 			// We need to sanitize incoming messages to prevent XSS.
 			sanitized := h.sanitizer.Sanitize(payload.Content)
 			payload.Content = sanitized
+
+			// If the message is a typing indicator, we don't need to persist it.
+			if payload.Type == "typing" {
+				err := broker.Publisher(ctx, h.jetstream, payload)
+				if err != nil {
+					log.Printf("%v", err)
+				}
+				continue
+			}
 
 			message := database.CreateMessageParams{
 				UserID:  pgtype.UUID{Bytes: [16]byte(payload.UserID), Valid: true},
@@ -69,16 +79,12 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 				},
 			}
 
-			// We persist the message to DB. Note: DB generates the ID.
-			// The ID in payload is currently 0 or temp, but for broadcast we might want real ID?
-			// Ideally we get the ID back from DB and update payload before broadcasting.
 			createdMsg, err := h.db.CreateMessage(ctx, message)
 			if err != nil {
 				log.Printf("failed to store payload to database: %v", err)
 				continue
 			}
 
-			// Update payload with DB-generated ID and created_at
 			payload.ID = createdMsg.ID
 			payload.CreatedAt = createdMsg.CreatedAt.Time
 
@@ -104,7 +110,19 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 	}
 }
 
-// NewHub returns a new instance of Hub.
+func (h *Hub) connectedUsers() {
+	// Retrieve connected users through the clients table.
+	// Send HTML fragment to client through websockets and do OOB swap thereafter.
+	// Remember to send the data through the client.MessageCh. DO NOT CREATE A WRITER.
+	userSize := len(h.clients)
+	for _, client := range h.clients {
+		client.MessageCh <- model.ChatMessage{
+			Content: strconv.Itoa(userSize),
+			Type:    "presenceCount",
+		}
+	}
+}
+
 func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
 	return &Hub{
 		db:         db,

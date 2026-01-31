@@ -39,15 +39,22 @@ func (c *Client) ReadMessage(ctx context.Context) {
 		// We need to unmarshal the JSON sent from the client side. HTMX's ws-send
 		// attribute will also send a HEADERS field along with the client message.
 		// Also, set CreatedAt to the current time.
+		// Set message.Type to 'message' as default. Override as needed.
 		payload := model.ChatMessage{
 			UserID:    c.UserID,
 			Username:  c.Username,
 			CreatedAt: time.Now().UTC(),
+			Type:      "message",
 		}
 		err = json.Unmarshal(p, &payload)
 		if err != nil {
 			log.Printf("failed to process payload from client: %v", err)
 			continue
+		}
+
+		// Check if the message is a typing indicator.
+		if trigger, ok := payload.Headers["HX-Trigger"]; ok && trigger == "user-input" {
+			payload.Type = "typing"
 		}
 
 		c.Hub.ClientMsg <- payload

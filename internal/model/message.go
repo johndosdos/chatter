@@ -14,4 +14,9 @@ type ChatMessage struct {
 	Username  string    `json:"username"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
+
+	// The HTTP request headers sent during websocket transmission
+	// used for typing indicator information.
+	Headers map[string]string `json:"HEADERS"`
+	Type    string            `json:"type,omitempty"`
 }
