@@ -14,11 +14,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 
 	"github.com/johndosdos/chatter/internal"
-	"github.com/johndosdos/chatter/internal/broker"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/handler"
 	ws "github.com/johndosdos/chatter/internal/websocket"
@@ -41,40 +38,40 @@ func main() {
 		port = "8080"
 	}
 
-	// Init NATS
-	var natsCredentials []nats.Option
+	/* 	// Init NATS
+	   	var natsCredentials []nats.Option
 
-	natsURL := os.Getenv("NATS_URL")
-	if natsURL == "" {
-		log.Fatal("NATS_URL environment variable is not set")
-	}
+	   	natsURL := os.Getenv("NATS_URL")
+	   	if natsURL == "" {
+	   		log.Fatal("NATS_URL environment variable is not set")
+	   	}
 
-	if cred := os.Getenv("NATS_CRED"); cred != "" {
-		natsCredentials = append(natsCredentials, nats.UserCredentials(cred))
-	} else if user, pass := os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD"); user != "" && pass != "" {
-		natsCredentials = append(natsCredentials, nats.UserInfo(user, pass))
-	}
+	   	if cred := os.Getenv("NATS_CRED"); cred != "" {
+	   		natsCredentials = append(natsCredentials, nats.UserCredentials(cred))
+	   	} else if user, pass := os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD"); user != "" && pass != "" {
+	   		natsCredentials = append(natsCredentials, nats.UserInfo(user, pass))
+	   	}
 
-	natsCredentials = append(natsCredentials, nats.Timeout(5*time.Second))
+	   	natsCredentials = append(natsCredentials, nats.Timeout(5*time.Second))
 
-	conn, err := nats.Connect(natsURL, natsCredentials...)
-	if err != nil {
-		log.Fatalf("failed to connect to nats: %v", err)
-	}
+	   	conn, err := nats.Connect(natsURL, natsCredentials...)
+	   	if err != nil {
+	   		log.Fatalf("failed to connect to nats: %v", err)
+	   	}
 
-	js, err := jetstream.New(conn)
-	if err != nil {
-		log.Fatalf("failed to create jetstream instance: %v", err)
-	}
+	   	js, err := jetstream.New(conn)
+	   	if err != nil {
+	   		log.Fatalf("failed to create jetstream instance: %v", err)
+	   	}
 
-	stream, err := js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
-		Name:     broker.StreamName,
-		Subjects: []string{broker.SubjectGlobalRoom},
-		MaxBytes: 1 << 30, // 1GB max storage
-	})
-	if err != nil {
-		log.Fatalf("failed to create/update stream: %v", err)
-	}
+	   	stream, err := js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
+	   		Name:     broker.StreamName,
+	   		Subjects: []string{broker.SubjectGlobalRoom},
+	   		MaxBytes: 1 << 30, // 1GB max storage
+	   	})
+	   	if err != nil {
+	   		log.Fatalf("failed to create/update stream: %v", err)
+	   	} */
 
 	// Init DB
 	dbURL := os.Getenv("DB_URL")
@@ -90,8 +87,8 @@ func main() {
 	dbQueries := database.New(dbConn)
 
 	// hub.Run is our central hub that is always listening for client related events.
-	hub := ws.NewHub(js, dbQueries)
-	go hub.Run(ctx, stream)
+	hub := ws.NewHub(dbQueries)
+	go hub.Run(ctx)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -143,10 +140,10 @@ func main() {
 		log.Println(err)
 	}
 
-	// Drain NATS connection.
-	if err := conn.Drain(); err != nil {
-		log.Printf("couldn't drain NATS conn: %+v", err)
-	}
+	/* 	// Drain NATS connection.
+	   	if err := conn.Drain(); err != nil {
+	   		log.Printf("couldn't drain NATS conn: %+v", err)
+	   	} */
 
 	// Close DB connection.
 	dbConn.Close()

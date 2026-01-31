@@ -13,21 +13,21 @@ services:
       timeout: 5s
       retries: 5
 
-  nats:
-    image: nats:alpine
-    container_name: chatter_broker
-    restart: always
-    command: --user ${NATS_USER} --pass ${NATS_PASSWORD} -js -m 8222 -sd /data
-    ports:
-      - "4222:4222"
-      - "8222:8222"
-    volumes:
-      - nats_data:/data
-    healthcheck:
-      test: wget --spider -q http://localhost:8222/healthz
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # nats:
+  #   image: nats:alpine
+  #   container_name: chatter_broker
+  #   restart: always
+  #   command: --user ${NATS_USER} --pass ${NATS_PASSWORD} -js -m 8222 -sd /data
+  #   ports:
+  #     - "4222:4222"
+  #     - "8222:8222"
+  #   volumes:
+  #     - nats_data:/data
+  #   healthcheck:
+  #     test: wget --spider -q http://localhost:8222/healthz
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
   server:
     build: .
@@ -37,8 +37,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      nats:
-        condition: service_healthy
+      # nats:
+      #   condition: service_healthy
 
     ports:
       - "8080:8080"

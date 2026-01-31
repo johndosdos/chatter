@@ -7,11 +7,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/johndosdos/chatter/internal/broker"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/model"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/nats-io/nats.go/jetstream"
 )
 
 type sanitizer interface {
@@ -25,21 +23,21 @@ type Registration struct {
 }
 
 type Hub struct {
-	db         *database.Queries
-	jetstream  jetstream.JetStream
+	db *database.Queries
+	// jetstream  jetstream.JetStream
 	clients    map[uuid.UUID]*Client
 	Register   chan Registration
 	Unregister chan *Client
 	ClientMsg  chan model.ChatMessage
-	BrokerMsg  chan model.ChatMessage
-	sanitizer  sanitizer
+	// BrokerMsg  chan model.ChatMessage
+	sanitizer sanitizer
 }
 
-func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
-	err := broker.Subscriber(ctx, stream, h.BrokerMsg)
-	if err != nil {
-		log.Printf("failed to subscribe to broker: %v", err)
-	}
+func (h *Hub) Run(ctx context.Context) {
+	/* 	err := broker.Subscriber(ctx, stream, h.BrokerMsg)
+	   	if err != nil {
+	   		log.Printf("failed to subscribe to broker: %v", err)
+	   	} */
 
 	for {
 		select {
@@ -60,14 +58,14 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 			sanitized := h.sanitizer.Sanitize(payload.Content)
 			payload.Content = sanitized
 
-			// If the message is a typing indicator, we don't need to persist it.
-			if payload.Type == "typing" {
-				err := broker.Publisher(ctx, h.jetstream, payload)
-				if err != nil {
-					log.Printf("%v", err)
-				}
-				continue
-			}
+			/* 			// If the message is a typing indicator, we don't need to persist it.
+			   			if payload.Type == "typing" {
+			   				err := broker.Publisher(ctx, h.jetstream, payload)
+			   				if err != nil {
+			   					log.Printf("%v", err)
+			   				}
+			   				continue
+			   			} */
 
 			message := database.CreateMessageParams{
 				UserID:  pgtype.UUID{Bytes: [16]byte(payload.UserID), Valid: true},
@@ -88,19 +86,14 @@ func (h *Hub) Run(ctx context.Context, stream jetstream.Stream) {
 			payload.ID = createdMsg.ID
 			payload.CreatedAt = createdMsg.CreatedAt.Time
 
-			err = broker.Publisher(ctx, h.jetstream, payload)
-			if err != nil {
-				log.Printf("%v", err)
-				continue
-			}
+			/* 			err = broker.Publisher(ctx, h.jetstream, payload)
+			   			if err != nil {
+			   				log.Printf("%v", err)
+			   				continue
+			   			} */
 
-		case payload := <-h.BrokerMsg:
 			for _, client := range h.clients {
-				select {
-				case client.MessageCh <- payload:
-				default:
-					log.Println("skipping message payload - channel full or client slow")
-				}
+				client.MessageCh <- payload
 			}
 
 		case <-ctx.Done():
@@ -123,15 +116,15 @@ func (h *Hub) connectedUsers() {
 	}
 }
 
-func NewHub(js jetstream.JetStream, db *database.Queries) *Hub {
+func NewHub(db *database.Queries) *Hub {
 	return &Hub{
-		db:         db,
-		jetstream:  js,
+		db: db,
+		// jetstream:  js,
 		clients:    make(map[uuid.UUID]*Client),
 		Register:   make(chan Registration),
 		Unregister: make(chan *Client),
 		ClientMsg:  make(chan model.ChatMessage, 1024),
-		BrokerMsg:  make(chan model.ChatMessage, 1024),
-		sanitizer:  bluemonday.StrictPolicy(),
+		// BrokerMsg:  make(chan model.ChatMessage, 1024),
+		sanitizer: bluemonday.StrictPolicy(),
 	}
 }
