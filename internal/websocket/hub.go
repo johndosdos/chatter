@@ -77,14 +77,16 @@ func (h *Hub) Run(ctx context.Context) {
 				},
 			}
 
-			createdMsg, err := h.db.CreateMessage(ctx, message)
-			if err != nil {
-				log.Printf("failed to store payload to database: %v", err)
-				continue
+			// If payload.Type is 'typing', try not to create an entry in the database.
+			if payload.Type == "message" {
+				createdMsg, err := h.db.CreateMessage(ctx, message)
+				if err != nil {
+					log.Printf("failed to store payload to database: %v", err)
+					continue
+				}
+				payload.ID = createdMsg.ID
+				payload.CreatedAt = createdMsg.CreatedAt.Time
 			}
-
-			payload.ID = createdMsg.ID
-			payload.CreatedAt = createdMsg.CreatedAt.Time
 
 			/* 			err = broker.Publisher(ctx, h.jetstream, payload)
 			   			if err != nil {
