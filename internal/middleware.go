@@ -49,9 +49,11 @@ func Middleware(db *database.Queries) func(http.Handler) http.Handler {
 
 			// Check if refresh token is valid or not. If invalid, redirect user
 			// to the login page.
-			if refreshTokenDB.ExpiresAt.Time.Before(time.Now().UTC()) ||
-				!refreshTokenDB.Valid.Bool {
+			if refreshTokenDB.ExpiresAt.Time.Before(time.Now().UTC()) {
 				log.Printf("refresh token expired: %v", err)
+				if err := db.RevokeRefreshToken(r.Context(), refreshTokenDB.Token); err != nil {
+					log.Printf("failed to revoke refresh token: %+v", err)
+				}
 				http.Redirect(w, r, "/account/login", http.StatusSeeOther)
 				return
 			}
