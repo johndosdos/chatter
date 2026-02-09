@@ -58,7 +58,10 @@ func SubmitLoginForm(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		err = auth.SetTokensAndCookies(w, r, db, user.UserID.Bytes)
+		refreshTokenExp := 7 * 24 * time.Hour
+		jwtExp := 5 * time.Minute
+		err = auth.SetTokensAndCookies(w, r, db,
+			user.UserID.Bytes, refreshTokenExp, jwtExp)
 		if err != nil {
 			log.Printf("%v", err)
 			return

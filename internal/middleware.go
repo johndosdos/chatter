@@ -58,7 +58,11 @@ func Middleware(db *database.Queries) func(http.Handler) http.Handler {
 				return
 			}
 
-			err = auth.SetTokensAndCookies(w, r, db, refreshTokenDB.UserID.Bytes)
+			jwtExp := 5 * time.Minute
+			err = auth.SetTokensAndCookies(w, r, db,
+				refreshTokenDB.UserID.Bytes,
+				time.Until(refreshTokenDB.ExpiresAt.Time),
+				jwtExp)
 			if err != nil {
 				log.Printf("%v", err)
 				return
