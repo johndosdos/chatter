@@ -8,7 +8,6 @@ tmp
 bin/
 .task
 secret
-.env
 .env.prod
 .env.previous
 conversation_context.json
