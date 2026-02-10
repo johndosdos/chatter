@@ -2,9 +2,8 @@ package chat
 
 templ ChatWindow() {
 	<div
-		hx-ext="sse"
-		sse-connect="/stream"
-		sse-swap="message"
+		hx-ext="ws"
+		ws-connect="/ws"
 		hx-swap="none"
 		class="w-full h-dvh overscroll-hidden max-w-3xl flex flex-col relative"
 	>
