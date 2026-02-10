@@ -1,8 +1,0 @@
-services:
-  server:
-    build:
-      context: .
-      target: final
-    restart: unless_stopped
-    volumes:
-    - /goapp/node_modules
