@@ -10,5 +10,5 @@ AGENTS.md
 bin/
 .task
 secret
-.env
 .env.prod
+.env.previous
