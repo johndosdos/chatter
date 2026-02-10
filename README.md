@@ -5,31 +5,46 @@
 
 Chatter is a real-time chat application. Users can hop in and send messages that are instantly broadcast to all connected clients.
 
-[Link to the app](https://chatter-server-678623746962.asia-southeast1.run.app)
+[Link to the app WIP]()
 
 ## Why I built this
 
-I use messaging apps daily and never thought about how they work internally. So I made a real-time chat app to figure it out. I started with WebSockets but switched to SSE because WebSockets were too complex for my use case. I added NATS JetStream as a message broker to ensure all server instances could handle messages to their respective clients.
+I use messaging apps daily and never thought about how they work internally. So I made a real-time chat app to figure it out. I used WebSockets to handle the bulk of data transmission which include sending messages, typing indicators, and user presence count.
 
 I kept the app simple, showing only user messages and usernames. No DMs, reactions or animations to focus on the logic behind real-time messaging.
 
 ## Tech stack
 
 - **Go** for the backend.
+- **WebSockets** for bidirectional client-server communication.
+- **PostgreSQL** for persistence (using `sqlc` for type-safe queries and `goose` for migrations).
+- **Docker** and **Docker Compose** for container orchestration.
 - **HTMX** + **Templ** for the frontend (no framework).
 - **Tailwind CSS** for styling.
-- **Server-Sent Events (SSE)** for pushing messages to clients.
-- **PostgreSQL** for persistence (using `sqlc` for type-safe queries).
-- **NATS JetStream** as the message broker.
-- **Google Cloud Platform (GCP)** for building and deploying to the cloud.
-- **Docker** and **Docker Compose** for local container orchestration.
+- **VPS** for deployment.
+
+## Security & Performance
+
+- **Authentication**: Argon2id password hashing.
+- **CSRF protection**: JWT + SameSite cookies.
+- **XSS prevention**: bluemonday sanitization.
+- **Rate limiting**: Per-user message throttling.
+- **Connection pooling**: pgx for efficient DB access.
+
+## Architecture Decisions
+
+**Why WebSockets?** Bidirectional communication for typing indicators and message delivery.
+
+**Why monolith?** Simpler deployment, easier debugging, and sufficient for current scale.
+
+**Why PostgreSQL?** ACID guarantees for message persistence and mature ecosystem.
 
 ## How it works
 
-Clients request an open connection via GET through the `/stream` (SSE) endpoint —> messages are sent via POST —> saved to the database —> published to NATS —> pushed to all connected clients via SSE.
+Clients request a WebSocket connection upgrade through the `/chat ` endpoint –> messages are sent to the server via WebSockets –> saved to the database –> broadcast to all connected clients.
 
-NATS handles the pub/sub part so multiple server instances could theoretically run without clients missing messages.
+We keep track of connected clients using the in-memory map.
 
 ## Running it locally
 
-During development, I used Docker and Compose to spin up and orchestrate the server, DB, and broker containers. I've set up a Taskfile.yaml to run dev tasks. Feel free to take a look around!
+During development, I used Docker and Compose to spin up and orchestrate the server, and DB containers. I've set up a Taskfile.yaml to run dev tasks. Feel free to take a look around!
