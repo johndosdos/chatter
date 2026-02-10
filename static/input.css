@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@layer base {
+  html {
+    /* Scale down UI by ~10% on mobile (14px base instead of 16px) */
+    font-size: 87.5%;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      /* Restore to default 16px on sm screens and above */
+      font-size: 100%;
+    }
+  }
+}

@@ -1,0 +1,13 @@
+package chat
+
+import "strconv"
+
+templ PresenceCount(clientSize int) {
+	<div hx-swap-oob="innerHTML:#presence-count">
+		if clientSize == 1 {
+			{ strconv.Itoa(clientSize) } user online
+		} else {
+			{ strconv.Itoa(clientSize) } users online
+		}
+	</div>
+}

@@ -12,17 +12,18 @@ import (
 	"github.com/johndosdos/chatter/internal/database"
 )
 
-// ServeLogin handles user login.
-func ServeLogin(db *database.Queries) http.HandlerFunc {
+func ServeLoginPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := viewAuth.Login().Render(r.Context(), w); err != nil {
+			log.Printf("failed to render component: %v", err)
+		}
+	}
+}
+
+// SubmitLoginForm handles user login.
+func SubmitLoginForm(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
-		if r.Method != http.MethodPost {
-			if err := viewAuth.Login().Render(ctx, w); err != nil {
-				log.Printf("failed to render component: %v", err)
-			}
-			return
-		}
 
 		err := r.ParseForm()
 		if err != nil {
@@ -57,7 +58,10 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		err = auth.SetTokensAndCookies(w, r, db, user.UserID.Bytes)
+		refreshTokenExp := 7 * 24 * time.Hour
+		jwtExp := 5 * time.Minute
+		err = auth.SetTokensAndCookies(w, r, db,
+			user.UserID.Bytes, refreshTokenExp, jwtExp)
 		if err != nil {
 			log.Printf("%v", err)
 			return
@@ -70,18 +74,18 @@ func ServeLogin(db *database.Queries) http.HandlerFunc {
 	}
 }
 
-// ServeSignup handles user account creation.
-func ServeSignup(db *database.Queries) http.HandlerFunc {
+func ServeSignupPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := viewAuth.Signup().Render(r.Context(), w); err != nil {
+			log.Printf("failed to render component: %v", err)
+		}
+	}
+}
+
+// SubmitSignupForm handles user account creation.
+func SubmitSignupForm(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
-		if r.Method != http.MethodPost {
-			if err := viewAuth.Signup().Render(ctx, w); err != nil {
-				log.Printf("failed to close connection: %v", err)
-				return
-			}
-			return
-		}
 
 		err := r.ParseForm()
 		if err != nil {
@@ -150,18 +154,11 @@ func ServeSignup(db *database.Queries) http.HandlerFunc {
 	}
 }
 
-// ServeLogout deletes the user's assigned refresh token, and redirects
+// SubmitLogoutReq deletes the user's assigned refresh token, and redirects
 // the user to the login page.
-func ServeLogout(db *database.Queries) http.HandlerFunc {
+func SubmitLogoutReq(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
-		if r.Method != http.MethodPost {
-			if err := viewAuth.Login().Render(ctx, w); err != nil {
-				log.Printf("failed to render component: %v", err)
-			}
-			return
-		}
 
 		refreshTok, err := r.Cookie("refresh_token")
 		if err == nil {

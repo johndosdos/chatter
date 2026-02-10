@@ -4,11 +4,13 @@ tmp
 .vscode
 .repo_ignore
 .gemini/
-GEMINI.md
-AGENTS.md
 *_llms.md
 bin/
 .task
 secret
+.env
 .env.prod
 .env.previous
+conversation_context.json
+temp
+internal/broker

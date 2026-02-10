@@ -16,7 +16,44 @@ templ ChatLayout() {
 					messageArea.scroll({ top: messageArea.scrollHeight, behavior: "smooth" })
 				});
 
-        htmx.ajax("GET", "/messages", { target: "#message-area", swap: "beforeend" });
+        let initialLoad = false;
+        document.body.addEventListener("htmx:wsOpen", () => {
+          initialLoad = true;
+        });
+
+        document.body.addEventListener("htmx:wsConnecting", () => {
+          if (!initialLoad) {
+            return;
+          }
+
+          let lastMsg = messageArea?.lastElementChild;
+          let messageID = lastMsg?.dataset.messageID;
+
+          if (!messageID) {
+            return
+          }
+
+          let url = new URL("/messages", window.location.origin);
+          url.searchParams.set("messageID", messageID);
+
+          htmx.ajax("GET", url.toString(), { target: "#message-area", swap: "beforeend" });
+        });
+
+        let typingTimer = null;        
+        document.body.addEventListener("htmx:oobAfterSwap", (event) => {
+          if (event.detail.target.id === "typing-indicator") {
+            const indicator = event.detail.target;
+            if (indicator.innerHTML.trim() !== "") {
+               indicator.classList.remove("hidden");
+               
+               clearTimeout(typingTimer);
+               typingTimer = setTimeout(() => {
+                 indicator.innerHTML = "";
+                 indicator.classList.add("hidden");
+               }, 3000);
+            }
+          }
+        });
 			</script>
 		</div>
 	}

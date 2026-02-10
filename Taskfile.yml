@@ -2,45 +2,31 @@
 
 version: "3"
 
-tasks:
-  up:
-    cmds:
-      - docker compose -f compose.yaml -f compose.dev.yaml up
+dotenv:
+  - .env
 
-  down:
+tasks:
+  compose::up:
+    cmds:
+      - docker compose --env-file ./.env -f compose.yaml -f compose.dev.yaml up
+
+  compose::down:
     cmds:
       - docker compose -f compose.yaml -f compose.dev.yaml down
 
-  up-build:
+  compose::up-build:
     cmds:
-      - docker compose -f compose.yaml -f compose.dev.yaml up --build
+      - docker compose --env-file ./.env -f compose.yaml -f compose.dev.yaml up --build
 
-  dev:
+  db::up:
     cmds:
-      - task: css
-      - task: templ
-      - task: server
-    silent: true
+      - goose up
 
-  server:
+  db::reset:
     cmds:
-      - golangci-lint && govulncheck
-      - "wgo -file .templ -xfile ._templ.go -file .go go build -o ./bin/ ./main.go :: ./bin/main"
+      - goose reset
 
-  templ:
+  local::server:
     cmds:
-      - templ generate
-
-    sources:
-      - ./components/**/*.templ
-    generates:
-      - ./components/**/*_templ.go
-
-  css:
-    cmds:
-      - pnpm run build:css
-
-    sources:
-      - ./static/input.css
-    generates:
-      - ./static/output.css
+      - >
+        pnpm run watch:css & wgo -file .templ -xfile ._templ.go -file .go templ generate :: go build -o ./bin/chatter main.go :: ./bin/chatter

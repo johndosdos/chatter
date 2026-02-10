@@ -1,15 +1,15 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
-	"github.com/johndosdos/chatter/internal/model"
 
-	"github.com/johndosdos/chatter/components/chat"
+	viewChat "github.com/johndosdos/chatter/components/chat"
 )
 
 // ServeMessages handles client message rendering. It will load recent
@@ -18,10 +18,6 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		if r.Method != http.MethodGet {
-			return
-		}
-
 		// Parse JWT and get UserID.
 		userID, err := auth.GetUserFromContext(ctx)
 		if err != nil {
@@ -29,24 +25,18 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		msgLimit := 50
-		dbMessageList, err := db.ListMessages(ctx, int32(msgLimit))
+		// Fetch latest 50 messages
+		dbMessageList, err := db.ListMessages(ctx, 50)
 		if err != nil {
 			log.Printf("%v", err)
 			return
 		}
 
-		var prevMsg model.Message
+		var prevMsg database.ListMessagesRow
 
+		// Iterate in reverse to show oldest messages first (chronological order)
 		for i := len(dbMessageList) - 1; i >= 0; i-- {
-			msg := dbMessageList[i]
-
-			message := model.Message{
-				UserID:    msg.UserID.Bytes,
-				Username:  msg.Username,
-				Content:   msg.Content,
-				CreatedAt: msg.CreatedAt.Time,
-			}
+			message := dbMessageList[i]
 
 			// Check if current and previous messages have the same UserID.
 			sameUser := false
@@ -58,13 +48,12 @@ func ServeMessages(db *database.Queries) http.HandlerFunc {
 
 			// Render message as sender or receiver.
 			var content templ.Component
-			if message.UserID == userID {
-				content = chat.SenderBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+			if message.UserID.Bytes == userID {
+				content = viewChat.SenderBubble(message.Username, message.Content, sameUser, message.ID)
 			} else {
-				content = chat.ReceiverBubble(message.Username, message.Content, sameUser, message.CreatedAt)
+				content = viewChat.ReceiverBubble(message.Username, message.Content, sameUser, message.ID)
 			}
-
-			if err := content.Render(ctx, w); err != nil {
+			if err := content.Render(context.Background(), w); err != nil {
 				log.Printf("failed to render component: %v", err)
 				return
 			}

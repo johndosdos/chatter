@@ -14,7 +14,7 @@ import (
 const createMessage = `-- name: CreateMessage :one
 INSERT INTO messages (user_id, content, created_at)
 VALUES ($1, $2, $3)
-RETURNING user_id, content, created_at
+RETURNING id, user_id, content, created_at
 `
 
 type CreateMessageParams struct {
@@ -26,19 +26,25 @@ type CreateMessageParams struct {
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
 	row := q.db.QueryRow(ctx, createMessage, arg.UserID, arg.Content, arg.CreatedAt)
 	var i Message
-	err := row.Scan(&i.UserID, &i.Content, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Content,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const listMessages = `-- name: ListMessages :many
-SELECT m.user_id, m.content, m.created_at, u.username
+SELECT m.id, m.user_id, m.content, m.created_at, u.username
 FROM messages m
 JOIN users u ON m.user_id = u.user_id
-ORDER BY created_at DESC
+ORDER BY m.created_at DESC
 LIMIT $1
 `
 
 type ListMessagesRow struct {
+	ID        int64
 	UserID    pgtype.UUID
 	Content   string
 	CreatedAt pgtype.Timestamptz
@@ -55,6 +61,7 @@ func (q *Queries) ListMessages(ctx context.Context, limit int32) ([]ListMessages
 	for rows.Next() {
 		var i ListMessagesRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.UserID,
 			&i.Content,
 			&i.CreatedAt,
