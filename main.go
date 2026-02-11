@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load("env", ".env.prod"); err != nil {
+	if err := godotenv.Load(".env.prod"); err != nil {
 		log.Printf("failed to load .env file: %+v", err)
 	}
 
