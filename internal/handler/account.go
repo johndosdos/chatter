@@ -37,7 +37,7 @@ func SubmitLoginForm(db *database.Queries) http.HandlerFunc {
 
 		user, err := db.GetUserWithPasswordByEmail(ctx, email)
 		if err != nil {
-			if err := viewAuth.Error("Invalid email or password.").Render(ctx, w); err != nil {
+			if err := viewAuth.ErrorMsgAuth("Invalid email or password.").Render(ctx, w); err != nil {
 				log.Printf("failed to render component: %v", err)
 				return
 			}
@@ -52,7 +52,7 @@ func SubmitLoginForm(db *database.Queries) http.HandlerFunc {
 			return
 		}
 		if !ok {
-			if err := viewAuth.Error("Invalid email or password.").Render(ctx, w); err != nil {
+			if err := viewAuth.ErrorMsgAuth("Invalid email or password.").Render(ctx, w); err != nil {
 				log.Printf("failed to render component: %v", err)
 			}
 			return
@@ -99,7 +99,7 @@ func SubmitSignupForm(db *database.Queries) http.HandlerFunc {
 
 		// Validate password by comparing main and confirm.
 		if password != confirmPw {
-			if err := viewAuth.Error("Passwords do not match!").Render(ctx, w); err != nil {
+			if err := viewAuth.ErrorMsgAuth("Passwords do not match!").Render(ctx, w); err != nil {
 				log.Printf("failed to close connection: %v", err)
 				return
 			}
