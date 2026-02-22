@@ -37,24 +37,45 @@ func (c *Client) ReadMessage(ctx context.Context) {
 		}
 
 		// We need to unmarshal the JSON sent from the client side. HTMX's ws-send
-		// attribute will also send a HEADERS field along with the client message.
+		// attribute also sends a HEADERS field along with the client message.
+		//
 		// Also, set CreatedAt to the current time.
 		// Set message.Type to 'message' as default. Override as needed.
-		payload := model.ChatMessage{
-			UserID:    c.UserID,
-			Username:  c.Username,
-			CreatedAt: time.Now().UTC(),
-			Type:      "message",
-		}
+		var payload model.ChatMessage
 		err = json.Unmarshal(p, &payload)
 		if err != nil {
 			log.Printf("failed to process payload from client: %v", err)
 			continue
 		}
+		// Reassign user info after deserializing the payload. The payload could be hijacked during
+		// transmission and we don't want to assign the incorrect info.
+		payload.UserID = c.UserID
+		payload.Username = c.Username
+		payload.CreatedAt = time.Now().UTC()
+		payload.Type = "message"
 
 		// Check if the message is a typing indicator.
+		// Typing rate limit
 		if trigger, ok := payload.Headers["HX-Trigger"]; ok && trigger == "user-input" {
 			payload.Type = "typing"
+
+			if !c.typingLim.Allow() {
+				continue
+			}
+		}
+
+		// Message rate limit
+		if payload.Type == "message" {
+			limitWindow := 10 * time.Second // 10s penalty when burst sending 30 messages/min
+			if !c.timeWarned.IsZero() && time.Since(c.timeWarned) < limitWindow {
+				continue
+			}
+
+			if !c.messageLim.Allow() {
+				c.timeWarned = time.Now()
+				c.MessageCh <- model.ChatMessage{Type: "rateLimitMessage"}
+				continue
+			}
 		}
 
 		c.Hub.ClientMsg <- payload

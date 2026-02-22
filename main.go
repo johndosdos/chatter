@@ -21,6 +21,7 @@ import (
 	"github.com/johndosdos/chatter/internal"
 	"github.com/johndosdos/chatter/internal/database"
 	"github.com/johndosdos/chatter/internal/handler"
+	ratelimiter "github.com/johndosdos/chatter/internal/rate_limiter"
 	ws "github.com/johndosdos/chatter/internal/websocket"
 )
 
@@ -113,12 +114,28 @@ func main() {
 	r.Handle("/static/*", http.FileServer(http.FS(FS)))
 	r.Get("/", handler.ServeRoot())
 
+	loginLimiter := ratelimiter.NewIPRateLimiter(5,
+		time.Minute,
+		ratelimiter.CleanupOpts{
+			TTL:      3 * time.Minute,
+			Interval: time.Minute,
+		})
+	defer loginLimiter.Cancel()
+
+	signupLimiter := ratelimiter.NewIPRateLimiter(10,
+		time.Hour,
+		ratelimiter.CleanupOpts{
+			TTL:      3 * time.Hour,
+			Interval: time.Minute,
+		})
+	defer signupLimiter.Cancel()
+
 	r.Route("/account", func(r chi.Router) {
 		r.Get("/login", handler.ServeLoginPage())
-		r.Post("/login", handler.SubmitLoginForm(dbQueries))
+		r.Post("/login", loginLimiter.Middleware(handler.SubmitLoginForm(dbQueries)))
 
 		r.Get("/signup", handler.ServeSignupPage())
-		r.Post("/signup", handler.SubmitSignupForm(dbQueries))
+		r.Post("/signup", signupLimiter.Middleware(handler.SubmitSignupForm(dbQueries)))
 
 		r.Post("/logout", handler.SubmitLogoutReq(dbQueries))
 	})

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/johndosdos/chatter/internal/auth"
 	"github.com/johndosdos/chatter/internal/database"
 )
@@ -68,7 +69,7 @@ func Middleware(db *database.Queries) func(http.Handler) http.Handler {
 				return
 			}
 
-			r = r.WithContext(context.WithValue(r.Context(), auth.UserIDKey, refreshTokenDB.UserID.Bytes))
+			r = r.WithContext(context.WithValue(r.Context(), auth.UserIDKey, uuid.UUID(refreshTokenDB.UserID.Bytes)))
 			next.ServeHTTP(w, r)
 		})
 	}
