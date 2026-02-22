@@ -14,3 +14,4 @@ secret
 conversation_context.json
 temp
 internal/broker
+.agent
