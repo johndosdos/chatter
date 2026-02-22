@@ -30,9 +30,7 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-			OriginPatterns: []string{"chatter.johndosdos.dev"},
-		})
+		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			slog.WarnContext(ctx, "WS handshake failed",
 				"error", err)
