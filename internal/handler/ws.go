@@ -19,6 +19,9 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		// Validate user from request context and check if user is in DB before
+		// websocket upgrade request. We want to fail early if one of the checks
+		// fail.
 		userID, err := auth.GetUserFromContext(ctx)
 		if err != nil {
 			slog.WarnContext(ctx, "unable to get user info from request context",
@@ -30,6 +33,13 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
+		user, err := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to get user from DB",
+				"error", err)
+			return
+		}
+
 		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			slog.WarnContext(ctx, "WS handshake failed",
@@ -37,7 +47,6 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
 		log.Printf("upgraded connection for user %s", user.Username)
 
 		// We'll register our new client to the central hub.
