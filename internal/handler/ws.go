@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/coder/websocket"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -17,18 +18,36 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-			InsecureSkipVerify: true,
-		})
-
+		// Validate user from request context and check if user is in DB before
+		// websocket upgrade request. We want to fail early if one of the checks
+		// fail.
 		userID, err := auth.GetUserFromContext(ctx)
 		if err != nil {
-			log.Printf("%v", err)
+			slog.WarnContext(ctx, "unable to get user info from request context",
+				"error", err,
+				"userID", userID)
+
+			w.Header().Add("HX-Redirect", "/account/login")
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		user, _ := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
-		log.Printf("upgraded connection for user %s", user.Username)
+		user, err := db.GetUserById(ctx, pgtype.UUID{Bytes: userID, Valid: true})
+		if err != nil {
+			slog.ErrorContext(ctx, "failed to get user from DB",
+				"error", err)
+			return
+		}
+
+		conn, err := websocket.Accept(w, r, nil)
+		if err != nil {
+			slog.WarnContext(ctx, "WS handshake failed",
+				"error", err)
+			return
+		}
+
+		slog.InfoContext(ctx, "user connection upgrade",
+			slog.String("username", user.Username))
 
 		// We'll register our new client to the central hub.
 		c := ws.NewClient(conn, user.UserID.Bytes, user.Username)
@@ -36,6 +55,12 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			Client: c,
 			Done:   make(chan struct{}),
 		}
+
+		messageReq := 30
+		typingReq := 30
+
+		c.SetMessageLimiter(messageReq, time.Minute)
+		c.SetTypingLimiter(typingReq, time.Minute)
 
 		h.Register <- reg
 

@@ -29,4 +29,7 @@ tasks:
   local::server:
     cmds:
       - >
-        pnpm run watch:css & wgo -file .templ -xfile ._templ.go -file .go templ generate :: go build -o ./bin/chatter main.go :: ./bin/chatter
+        govulncheck && 
+        golangci-lint run &&
+        pnpm run watch:css &&
+        wgo -file .templ -xfile ._templ.go -file .go templ generate :: go build -o ./bin/chatter main.go :: ./bin/chatter

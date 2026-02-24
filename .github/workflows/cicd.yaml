@@ -1,0 +1,101 @@
+name: cicd
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-go@v6.2.0
+        with:
+          go-version: "1.26"
+      - run: go version
+
+      - name: Format code
+        run: go fmt ./...
+
+      - name: Golangci-lint
+        uses: golangci/golangci-lint-action@v9.2.0
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: chatter_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-go@v6.2.0
+        with:
+          go-version: "1.26"
+      - run: go version
+
+      - name: Run test
+        env:
+          TEST_DB_URL: postgres://postgres:password@localhost:5432/chatter_test?sslmode=disable
+        run: go test ./...
+
+  docker:
+    name: Build and push docker image
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    needs: [lint, test]
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3.7.0
+        with:
+          username: ${{ vars.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6.19.2
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ vars.DOCKER_HUB_USERNAME }}/chatter:latest
+            ${{ vars.DOCKER_HUB_USERNAME }}/chatter:${{ github.sha }}
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    if: github.red == 'refs/heads/main' && github.event_name == 'push'
+
+    needs: docker
+    steps:
+      - name: SSH into VPS and pull latest docker image
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.VPS_DO_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            cd chatter-prod/
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
