@@ -14,6 +14,8 @@ import (
 	"github.com/johndosdos/chatter/internal/testutil"
 )
 
+const tokenSecret = "validtokensecret"
+
 func TestHashPassword(t *testing.T) {
 	t.Run("unique hashes", func(t *testing.T) {
 		pw := "password1234"
@@ -83,7 +85,6 @@ func TestCheckPasswordHash(t *testing.T) {
 func TestJWT(t *testing.T) {
 	t.Run("Valid_JWT", func(t *testing.T) {
 		userID := uuid.New()
-		tokenSecret := "validtokensecret"
 		expiration := 15 * time.Second
 		tokenString, err := MakeJWT(userID, tokenSecret, expiration)
 		if err != nil {
@@ -100,7 +101,6 @@ func TestJWT(t *testing.T) {
 
 	t.Run("Incorrect_secret", func(t *testing.T) {
 		userID := uuid.New()
-		tokenSecret := "validtokensecret"
 		expiration := 15 * time.Second
 		tokenString, err := MakeJWT(userID, tokenSecret, expiration)
 		if err != nil {
@@ -115,7 +115,6 @@ func TestJWT(t *testing.T) {
 
 	t.Run("Expired_token", func(t *testing.T) {
 		userID := uuid.New()
-		tokenSecret := "validtokensecret"
 		expiration := -1 * time.Second
 		tokenString, err := MakeJWT(userID, tokenSecret, expiration)
 		if err != nil {
@@ -128,7 +127,6 @@ func TestJWT(t *testing.T) {
 	})
 
 	t.Run("Corrupt_token", func(t *testing.T) {
-		tokenSecret := "validtokensecret"
 		tokenString := "corrupttoken"
 		_, err := ValidateJWT(tokenString, tokenSecret)
 		if err == nil {

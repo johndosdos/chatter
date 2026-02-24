@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -47,7 +46,8 @@ func ServeWs(h *ws.Hub, db *database.Queries) http.HandlerFunc {
 			return
 		}
 
-		log.Printf("upgraded connection for user %s", user.Username)
+		slog.InfoContext(ctx, "user connection upgrade",
+			slog.String("username", user.Username))
 
 		// We'll register our new client to the central hub.
 		c := ws.NewClient(conn, user.UserID.Bytes, user.Username)

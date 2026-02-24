@@ -51,7 +51,9 @@ func DbInit() (*pgxpool.Pool, *sql.DB, string) {
 	var dbErr error
 	dbForGoose := stdlib.OpenDBFromPool(dbPool)
 	if dbErr = goose.Reset(dbForGoose, migDir); dbErr != nil {
-		dbForGoose.Close()
+		if err := dbForGoose.Close(); err != nil {
+			log.Fatalf("DB error: %+v", err)
+		}
 		log.Fatalf("goose.Reset() error = %+v", dbErr)
 	}
 
@@ -60,14 +62,18 @@ func DbInit() (*pgxpool.Pool, *sql.DB, string) {
 
 func DbGooseUp(dbForGoose *sql.DB, migDir string) {
 	if dbErr := goose.Up(dbForGoose, migDir); dbErr != nil {
-		dbForGoose.Close()
+		if err := dbForGoose.Close(); err != nil {
+			log.Fatalf("DB error: %+v", err)
+		}
 		log.Fatalf("goose.Up() error = %+v", dbErr)
 	}
 }
 
 func DbGooseReset(dbForGoose *sql.DB, migDir string) {
 	if dbErr := goose.Reset(dbForGoose, migDir); dbErr != nil {
-		dbForGoose.Close()
+		if err := dbForGoose.Close(); err != nil {
+			log.Fatalf("DB error: %+v", err)
+		}
 		log.Fatalf("goose.Up() error = %+v", dbErr)
 	}
 }

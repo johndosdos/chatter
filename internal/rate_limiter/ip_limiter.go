@@ -48,7 +48,7 @@ func NewIPRateLimiter(requests int, window time.Duration, cleanupOpts CleanupOpt
 }
 
 func (rl *IPRateLimiter) cleanup(ctx context.Context) {
-	ticker := time.NewTicker(rl.CleanupOpts.Interval)
+	ticker := time.NewTicker(rl.Interval)
 	defer ticker.Stop()
 
 	for {
@@ -59,7 +59,7 @@ func (rl *IPRateLimiter) cleanup(ctx context.Context) {
 			rl.mu.Lock()
 
 			for ip, ls := range rl.lastSeen {
-				if time.Since(ls) > rl.CleanupOpts.TTL {
+				if time.Since(ls) > rl.TTL {
 					delete(rl.limiters, ip)
 					delete(rl.lastSeen, ip)
 				}
@@ -79,8 +79,9 @@ func (rl *IPRateLimiter) GetClientIP(r *http.Request) ipAddr {
 
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
+		//nolint:gosec
 		slog.Warn("invalid argument for net.SplitHostPort()",
-			"remote address", r.RemoteAddr)
+			slog.String("remote_addr", r.RemoteAddr))
 		return ipAddr(r.RemoteAddr)
 	}
 

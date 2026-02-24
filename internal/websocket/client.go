@@ -11,7 +11,6 @@ import (
 	"github.com/coder/websocket"
 	"github.com/google/uuid"
 	"github.com/johndosdos/chatter/components/chat"
-	components "github.com/johndosdos/chatter/components/chat"
 	"github.com/johndosdos/chatter/internal/model"
 	"golang.org/x/time/rate"
 )
@@ -58,7 +57,10 @@ func (c *Client) WriteMessage(ctx context.Context) {
 			// We don't want to continue processing when the channel has already been
 			// closed.
 			if !ok {
-				c.conn.Close(websocket.StatusNormalClosure, "channel closed")
+				if err := c.conn.Close(websocket.StatusNormalClosure, "channel closed"); err != nil {
+					slog.Warn("websocket connection closed", slog.Any("error", err),
+						slog.String("reason", websocket.StatusNormalClosure.String()))
+				}
 				return
 			}
 
@@ -67,13 +69,13 @@ func (c *Client) WriteMessage(ctx context.Context) {
 
 			var content templ.Component
 			switch payload.Type {
-			case "typing":
+			case payloadTyping:
 				if fromSender {
 					continue
 				}
 				content = chat.TypingIndicator(payload.Username)
 
-			case "presenceCount":
+			case payloadPresenceCount:
 				// We expect a string that contain the count of currently connected users.
 				s, err := strconv.Atoi(payload.Content)
 				if err != nil {
@@ -82,16 +84,16 @@ func (c *Client) WriteMessage(ctx context.Context) {
 				}
 				content = chat.PresenceCount(s)
 
-			case "rateLimitMessage":
+			case payloadRateLimit:
 				limitWindow := 10 * time.Second // 10s penalty when burst sending 30 messages/min
 				timeRemaining := limitWindow - time.Since(c.timeWarned)
 				content = chat.RateLimitWarning(int(timeRemaining.Seconds()))
 
-			case "message":
+			case payloadMessage:
 				if fromSender {
-					content = components.SenderBubble(payload.Username, payload.Content, isSameUserPrevMsg, payload.ID)
+					content = chat.SenderBubble(payload.Username, payload.Content, isSameUserPrevMsg, payload.ID)
 				} else {
-					content = components.ReceiverBubble(payload.Username, payload.Content, isSameUserPrevMsg, payload.ID)
+					content = chat.ReceiverBubble(payload.Username, payload.Content, isSameUserPrevMsg, payload.ID)
 				}
 			}
 
@@ -115,20 +117,28 @@ func (c *Client) WriteMessage(ctx context.Context) {
 					"user_id", c.UserID.String(),
 					"username", c.Username)
 				cancel()
-				w.Close()
+				if err := w.Close(); err != nil {
+					slog.Error("writer unexpectedly closed", slog.Any("error", err))
+				}
 				continue
 			}
 
-			w.Close()
+			if err := w.Close(); err != nil {
+				slog.Error("writer unexpectedly closed", slog.Any("error", err))
+			}
 			cancel()
 
 			// Only update prevMsg for regular messages, not typing indicators.
-			if payload.Type == "message" {
+			if payload.Type == payloadMessage {
 				prevMsg = payload
 			}
 
 		case <-ctx.Done():
-			c.conn.Close(websocket.StatusGoingAway, "context cancelled")
+			if err := c.conn.Close(websocket.StatusGoingAway, "context cancelled"); err != nil {
+				slog.Warn("websocket connection closed",
+					slog.Any("error", err),
+					slog.String("reason", websocket.StatusGoingAway.String()))
+			}
 			return
 		}
 	}

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -70,7 +71,8 @@ func SubmitLoginForm(db *database.Queries) http.HandlerFunc {
 		w.Header().Set("HX-Redirect", "/chat")
 		w.WriteHeader(http.StatusOK)
 
-		log.Printf("user [%s] logged in", user.Username)
+		slog.InfoContext(ctx, "user logged in",
+			slog.String("username", user.Username))
 	}
 }
 
@@ -150,7 +152,8 @@ func SubmitSignupForm(db *database.Queries) http.HandlerFunc {
 		w.Header().Set("HX-Redirect", "/account/login")
 		w.WriteHeader(http.StatusOK)
 
-		log.Printf("user [%s] registered", user.Username)
+		slog.InfoContext(ctx, "user signed up",
+			slog.String("username", user.Username))
 	}
 }
 

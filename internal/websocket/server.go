@@ -4,17 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/coder/websocket"
 	"github.com/johndosdos/chatter/internal/model"
 )
 
+const (
+	payloadMessage       = "message"
+	payloadPresenceCount = "presenceCount"
+	payloadTyping        = "typing"
+	payloadRateLimit     = "rateLimitMessage"
+)
+
 // ReadMessage reads the incoming data from the websocket stream.
 func (c *Client) ReadMessage(ctx context.Context) {
 	defer func() {
 		c.Hub.Unregister <- c
-		c.conn.CloseNow()
+		if err := c.conn.CloseNow(); err != nil {
+			slog.Warn("websocket connection closed", slog.Any("error", err))
+		}
 	}()
 
 	for {
@@ -52,12 +62,12 @@ func (c *Client) ReadMessage(ctx context.Context) {
 		payload.UserID = c.UserID
 		payload.Username = c.Username
 		payload.CreatedAt = time.Now().UTC()
-		payload.Type = "message"
+		payload.Type = payloadMessage
 
 		// Check if the message is a typing indicator.
 		// Typing rate limit
 		if trigger, ok := payload.Headers["HX-Trigger"]; ok && trigger == "user-input" {
-			payload.Type = "typing"
+			payload.Type = payloadTyping
 
 			if !c.typingLim.Allow() {
 				continue
@@ -65,7 +75,7 @@ func (c *Client) ReadMessage(ctx context.Context) {
 		}
 
 		// Message rate limit
-		if payload.Type == "message" {
+		if payload.Type == payloadMessage {
 			limitWindow := 10 * time.Second // 10s penalty when burst sending 30 messages/min
 			if !c.timeWarned.IsZero() && time.Since(c.timeWarned) < limitWindow {
 				continue
@@ -73,7 +83,7 @@ func (c *Client) ReadMessage(ctx context.Context) {
 
 			if !c.messageLim.Allow() {
 				c.timeWarned = time.Now()
-				c.MessageCh <- model.ChatMessage{Type: "rateLimitMessage"}
+				c.MessageCh <- model.ChatMessage{Type: payloadRateLimit}
 				continue
 			}
 		}
